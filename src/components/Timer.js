@@ -4,6 +4,7 @@ class Timer extends Component {
   
   state = {
     isRunning: false,
+    onBreak: false,
     elapsedTime: 1500000,
     previousTime: 0
   }
@@ -13,13 +14,23 @@ class Timer extends Component {
   }
 
   tick = () => {
-    if(this.state.isRunning){
+    if(this.state.elapsedTime < 0 && !this.state.onBreak) {
+      this.setState({ 
+        elapsedTime: 300000,
+        onBreak: true
+      });
+    } else if (this.state.elapsedTime < 0 && this.state.onBreak){
+      this.setState({
+        elapsedTime: 1500000,
+        onBreak: false
+      });
+    } else if (this.state.isRunning) {
       const now = Date.now()
       this.setState(prevState => ({
         previousTime: now,
         elapsedTime: prevState.elapsedTime - (now - this.state.previousTime)
       }));
-    }
+    } 
   }
 
   handleTimer = () => {
@@ -32,7 +43,12 @@ class Timer extends Component {
   }
 
   handleReset = () => {
-    this.setState({ elapsedTime: 1500000 });
+    if (!this.state.onBreak) {
+      this.setState({ elapsedTime: 1500000 });
+    } else {
+      this.setState({ elapsedTime: 300000 });
+    }
+    
   }
 
   render() { 
@@ -47,16 +63,16 @@ class Timer extends Component {
       <>
         <div className="container">
           <div className="row">
-            <div className="col">
-              <span>{ minutes } : { seconds }</span>
+            <div className="col d-flex justify-content-center p-5">
+              <span className="display-3 font-weight-bold text-white">{ minutes } : { seconds }</span>
             </div>
           </div>
           <div className="row">
-            <div className="col">
-              <button type="button" className="btn btn-primary" onClick={this.handleTimer}> 
+            <div className="col d-flex justify-content-center">
+              <button type="button" className="btn btn-primary btn-lg m-2 p-4 font-weight-bold" onClick={this.handleTimer}> 
               { this.state.isRunning ? 'Stop' : 'Start' }
               </button>
-              <button type="button" className="btn btn-primary" onClick={this.handleReset}>Reset</button>
+              <button type="button" className="btn btn-primary btn-lg m-2 p-4 font-weight-bold" onClick={this.handleReset}>Reset</button>
             </div>
           </div>
         </div>
