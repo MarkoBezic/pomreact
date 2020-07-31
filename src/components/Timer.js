@@ -7,8 +7,8 @@ class Timer extends Component {
     onBreak: false,
     previousTime: 0,
     counter: 0,
-    focusTime: 1500000,
-    breakTime: 300000,
+    focusTime: 5000,
+    breakTime: 3000,
     userFocusTime: '',
     userBreakTime: ''
   }
@@ -18,13 +18,19 @@ class Timer extends Component {
   }
 
   tick = () => {
-    if(this.state.focusTime < 0 && !this.state.onBreak) {
-      this.setState(prevState => ({ 
+    if (this.state.focusTime < 1000 && !this.state.onBreak) {
+      this.setState({ 
+        focusTime: this.state.focusTime - this.state.focusTime
+       });
+       this.setState(prevState => ({ 
         onBreak: true,
         focusTime: this.state.userFocusTime <= 0 ? 1500000 : this.state.userFocusTime * 1000 * 60,
         counter: prevState.counter + 1
       }));
-    } else if (this.state.breakTime < 0 && this.state.onBreak){
+    } else if (this.state.breakTime < 1000 && this.state.onBreak){
+      this.setState({ 
+        breakTime: this.state.breakTime - this.state.breakTime
+       });
       this.setState({
         onBreak: false,
         breakTime: this.state.userBreakTime <= 0 ? 300000 : this.state.userBreakTime * 1000 * 60
@@ -100,7 +106,7 @@ class Timer extends Component {
 
     return ( 
       <>
-        <div className="container">
+        <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
               <form onSubmit={this.handleSubmit}>
