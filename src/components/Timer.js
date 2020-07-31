@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import UserInput from './UserInput'
 
 class Timer extends Component {
   
@@ -6,7 +7,8 @@ class Timer extends Component {
     isRunning: false,
     onBreak: false,
     elapsedTime: 1500000,
-    previousTime: 0
+    previousTime: 0,
+    counter: 0
   }
 
   componentDidMount() {
@@ -15,10 +17,11 @@ class Timer extends Component {
 
   tick = () => {
     if(this.state.elapsedTime < 0 && !this.state.onBreak) {
-      this.setState({ 
+      this.setState(prevState => ({ 
         elapsedTime: 300000,
-        onBreak: true
-      });
+        onBreak: true,
+        counter: prevState.counter + 1
+      }));
     } else if (this.state.elapsedTime < 0 && this.state.onBreak){
       this.setState({
         elapsedTime: 1500000,
@@ -51,6 +54,12 @@ class Timer extends Component {
     
   }
 
+  handleFocusTime = (userTime) => {
+    this.setState({
+      elapsedTime: userTime
+    });
+  }
+
   render() { 
     let time = Math.floor(this.state.elapsedTime/1000)
     let minutes = Math.floor( time / 60)
@@ -63,8 +72,26 @@ class Timer extends Component {
       <>
         <div className="container">
           <div className="row">
+            <div className="col d-flex justify-content-center pt-3">
+              <span>
+                {<UserInput 
+                    focusTime={this.handleFocusTime} 
+                    breakTime={this.handleBreakTime}
+                    onBreak={this.state.onBreak}
+                    />}
+              </span>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col d-flex justify-content-center pt-5">
+              <span className="display-4 font-weight-bold text-white">
+                Rounds Completed: {this.state.counter}
+              </span>
+            </div>
+          </div>
+          <div className="row">
             <div className="col d-flex justify-content-center p-5">
-              <span className="display-3 font-weight-bold text-white">{ minutes } : { seconds }</span>
+              <span className="display-2 font-weight-bold text-white">{ minutes } : { seconds }</span>
             </div>
           </div>
           <div className="row">
