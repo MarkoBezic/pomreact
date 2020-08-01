@@ -32,9 +32,6 @@ class Timer extends Component {
 
   tick = () => {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
-      this.setState({ 
-        focusTime: this.state.focusTime - this.state.focusTime
-       });
        this.setState(prevState => ({ 
         onBreak: true,
         focusTime: this.state.userFocusTime <= 0 ? 1500000 : this.state.userFocusTime * 1000 * 60,
@@ -42,9 +39,6 @@ class Timer extends Component {
       }));
       this.soundPlay(audioClips[0].sound);
     } else if (this.state.breakTime < 1000 && this.state.onBreak){
-      this.setState({ 
-        breakTime: this.state.breakTime - this.state.breakTime
-       });
       this.setState({
         onBreak: false,
         breakTime: this.state.userBreakTime <= 0 ? 300000 : this.state.userBreakTime * 1000 * 60
