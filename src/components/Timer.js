@@ -1,5 +1,10 @@
 import React, { Component } from 'react';
+import {Howl} from 'howler';
 
+const audioClips = [
+  {sound: 'http://soundbible.com/mp3/Boxing%20Mma%20Or%20Wrestling%20Bell-SoundBible.com-252285194.mp3'},
+  {sound: 'http://soundbible.com/mp3/Temple%20Bell-SoundBible.com-756181215.mp3'}
+]
 class Timer extends Component {
   
   state = {
@@ -7,10 +12,18 @@ class Timer extends Component {
     onBreak: false,
     previousTime: 0,
     counter: 0,
-    focusTime: 5000,
-    breakTime: 3000,
-    userFocusTime: '',
-    userBreakTime: ''
+    focusTime: 1500000,
+    breakTime: 300000,
+    userFocusTime: "",
+    userBreakTime: ""
+  }
+
+  soundPlay = (src) => {
+    const sound = new Howl ({ 
+      src,
+      html5: true
+     })
+     sound.play();
   }
 
   componentDidMount() {
@@ -27,6 +40,7 @@ class Timer extends Component {
         focusTime: this.state.userFocusTime <= 0 ? 1500000 : this.state.userFocusTime * 1000 * 60,
         counter: prevState.counter + 1
       }));
+      this.soundPlay(audioClips[0].sound);
     } else if (this.state.breakTime < 1000 && this.state.onBreak){
       this.setState({ 
         breakTime: this.state.breakTime - this.state.breakTime
@@ -35,6 +49,7 @@ class Timer extends Component {
         onBreak: false,
         breakTime: this.state.userBreakTime <= 0 ? 300000 : this.state.userBreakTime * 1000 * 60
       });
+      this.soundPlay(audioClips[1].sound);
     } else if (this.state.isRunning && !this.state.onBreak) {
       const now = Date.now()
       this.setState(prevState => ({
@@ -61,9 +76,11 @@ class Timer extends Component {
 
   handleReset = () => {
     if (!this.state.onBreak) {
-      this.setState({ focusTime: this.state.userFocusTime * 1000 * 60});
+      this.setState({ focusTime: this.state.userFocusTime === "" ? 1500000 : this.state.userFocusTime * 1000 * 60});
+      //
     } else {
-      this.setState({ breakTime: this.state.userBreakTime * 1000 * 60});
+      this.setState({ breakTime: this.state.userBreakTime === "" ? 300000 : this.state.userBreakTime * 1000 * 60});
+      //
     }
   }
 
