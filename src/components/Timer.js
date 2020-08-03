@@ -162,10 +162,10 @@ class Timer extends Component {
             </div>
           </div>
         </div>
-        
       </>
      );
   }
 }
+
  
 export default Timer;
