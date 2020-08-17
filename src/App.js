@@ -1,6 +1,6 @@
 import React from 'react';
 import Timer from './components/Timer'
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
 
 function App() {
   return (

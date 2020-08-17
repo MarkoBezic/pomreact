@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import {Howl} from 'howler';
+import { taskMasterRef, taskDetailRef}  from '../firebase'
+import data from '../sampleData'
 
 const audioClips = [
   {sound: 'http://soundbible.com/mp3/Boxing%20Mma%20Or%20Wrestling%20Bell-SoundBible.com-252285194.mp3'},
@@ -14,8 +16,10 @@ class Timer extends Component {
     counter: 0,
     focusTime: 1500000,
     breakTime: 300000,
-    userFocusTime: "",
-    userBreakTime: ""
+    userFocusTime: '',
+    userBreakTime: '',
+    taskName: ''
+
   }
 
   soundPlay = (src) => {
@@ -28,6 +32,17 @@ class Timer extends Component {
 
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
+    console.log(taskDetailRef);
+  }
+
+  // from stackoverflow (https://stackoverflow.com/questions/4689856/how-to-change-value-of-object-which-is-inside-an-array-using-javascript-or-jquer)
+  updateRoundsTotal = (taskName, rounds) => {
+    for(var i in data.tasks) {
+      if(data.tasks[i].taskName === taskName) {
+        data.tasks[i].rounds = rounds + 1;
+        break;
+      }
+    }
   }
 
   tick = () => {
@@ -38,6 +53,7 @@ class Timer extends Component {
         counter: prevState.counter + 1
       }));
       this.soundPlay(audioClips[0].sound);
+      this.updateRoundsTotal(this.state.taskName, this.state.counter);
     } else if (this.state.breakTime < 1000 && this.state.onBreak){
       this.setState({
         onBreak: false,
@@ -71,26 +87,22 @@ class Timer extends Component {
   handleReset = () => {
     if (!this.state.onBreak) {
       this.setState({ focusTime: this.state.userFocusTime === "" ? 1500000 : this.state.userFocusTime * 1000 * 60});
-      //
     } else {
       this.setState({ breakTime: this.state.userBreakTime === "" ? 300000 : this.state.userBreakTime * 1000 * 60});
-      //
     }
   }
 
-  handleFocusTime = (userTime) => {
-    this.setState({
-      focusTime: userTime
-    });
+  handleSkip = () => {
+    this.setState({ 
+      onBreak: !this.state.onBreak
+     })
   }
+ 
+  taskNameInput = React.createRef()
+  focusInput = React.createRef()
+  breakInput = React.createRef()
 
-  handleBreakTime = (userTime) => {
-    this.setState({
-      breakTime: userTime
-    });
-  }
-
-  handleTimeChange = (e) => {
+  handleInputChange = (e) => {
     const target = e.target;
     const value = target.value;
     const name = target.name;
@@ -101,10 +113,35 @@ class Timer extends Component {
 
   handleSubmit = (e) => {
     e.preventDefault();
+    const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now())
+    const newId = data.tasks.length + 1
     this.setState({ 
       focusTime: this.state.userFocusTime * 1000 * 60,
-      breakTime: this.state.userBreakTime * 1000 * 60
+      breakTime: this.state.userBreakTime * 1000 * 60,
+      taskName: this.state.taskName
      })
+     //adding record to tasks array
+     data.tasks.push({
+          id: newId,
+          taskName: this.state.taskName,
+          date: today,
+          rounds: 0,
+          focusMinutes: parseInt(this.state.userFocusTime),
+          breakMinutes: parseInt(this.state.userBreakTime),
+     })
+     console.log(data.tasks[3])
+     //creates record in firebase
+      //TODO: if task name already exists and date matches today's date then update rounds, otherwise create new task session entry
+    //  taskDetailRef.add({
+    //    id: 4,
+    //    taskName: this.state.taskName,
+    //    date: today,
+    //    rounds: this.state.counter
+    //  })
+    
+    this.taskNameInput.current.value = ''
+    this.focusInput.current.value = ''
+    this.breakInput.current.value = ''
   }
 
   render() { 
@@ -120,20 +157,29 @@ class Timer extends Component {
         <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
-              <form onSubmit={this.handleSubmit}>
+              <form 
+                className=""
+                onSubmit={this.handleSubmit}>
+                <input 
+                  type="string"
+                  name="taskName"
+                  placeholder="Enter Task Name"
+                  onChange={this.handleInputChange}
+                  ref={this.taskNameInput}
+                />
                 <input 
                   type="number"
                   name="userFocusTime"
                   placeholder="Enter focus minutes"
-                  onChange={this.handleTimeChange}
-                  value={this.state.userFocusTime}
+                  onChange={this.handleInputChange}
+                  ref={this.focusInput}
                 />
                 <input 
                   type="number"
                   name="userBreakTime"
                   placeholder="Enter break minutes"
-                  onChange={this.handleTimeChange}
-                  value={this.state.userBreakTime}
+                  onChange={this.handleInputChange}
+                  ref={this.breakInput}
                 />
                 <input 
                   type="submit"
@@ -142,14 +188,12 @@ class Timer extends Component {
             </div>
           </div>
           <div className="row">
-            <div className="col d-flex justify-content-center pt-5">
-              <span className="display-4 font-weight-bold text-white">
-                Rounds Completed: {this.state.counter}
-              </span>
+            <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
+              <span>{this.state.taskName ? this.state.taskName : 'Task'}</span>
             </div>
           </div>
           <div className="row">
-            <div className="col d-flex justify-content-center p-5">
+            <div className="col d-flex justify-content-center p-3">
               <span className="display-2 font-weight-bold text-white">{ minutes } : { seconds }</span>
             </div>
           </div>
@@ -159,8 +203,40 @@ class Timer extends Component {
               { this.state.isRunning ? 'Stop' : 'Start' }
               </button>
               <button type="button" className="btn btn-primary btn-lg m-2 p-4 font-weight-bold" onClick={this.handleReset}>Reset</button>
+              {this.state.onBreak ? <button type="button" className="btn btn-primary btn-lg m-2 p-4 font-weight-bold" onClick={this.handleSkip}>Skip</button> : ''}
             </div>
           </div>
+          <div className="row">
+              <div className="col d-flex justify-content-center">
+                <p className="font-weight-bold text-white pt-4">
+                  Rounds Completed: {this.state.counter}
+                </p>
+              </div>
+            </div>
+          <div className="row">
+            <div div className="col d-flex justify-content-center pt-4 text-white">
+               <table>
+                <thead>
+                  <tr>
+                    <th>Task</th>
+                    <th className="pr-3">Total Rounds:</th>
+                    <th>Edit</th>
+                    <th>Resume</th>
+                    <th>Delete</th>
+                  </tr>
+                  {data.tasks.map((task, index) => (
+                  <tr key={index}>
+                    <td>{task.taskName}: </td>
+                    <td className="text-center">{task.rounds}</td>
+                    <td><button className="btn btn-primary ml-1 mr-1 mt-1">Edit</button></td>
+                    <td><button className="btn btn-primary ml-1 mr-1 mt-1">Resume</button></td>
+                    <td><button className="btn btn-primary ml-1 mr-1 mt-1">Delete</button></td>
+                  </tr>
+                  ))}
+                </thead>
+              </table>
+            </div>  
+          </div>   
         </div>
       </>
      );
