@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {Howl} from 'howler';
-import { taskMasterRef, taskDetailRef}  from '../firebase'
+import { db }  from '../firebase'
 import data from '../sampleData'
 
 const audioClips = [
@@ -18,8 +18,8 @@ class Timer extends Component {
     breakTime: 300000,
     userFocusTime: '',
     userBreakTime: '',
-    taskName: ''
-
+    taskName: '',
+    sessionId: ''
   }
 
   soundPlay = (src) => {
@@ -32,17 +32,19 @@ class Timer extends Component {
 
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
-    console.log(taskDetailRef);
   }
 
-  // from stackoverflow (https://stackoverflow.com/questions/4689856/how-to-change-value-of-object-which-is-inside-an-array-using-javascript-or-jquer)
-  updateRoundsTotal = (taskName, rounds) => {
-    for(var i in data.tasks) {
-      if(data.tasks[i].taskName === taskName) {
-        data.tasks[i].rounds = rounds + 1;
-        break;
-      }
-    }
+  updateRoundsTotal = () => {
+    //not doing what I want it too//
+
+    // const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now())
+    // db.collection(`${this.state.taskName}.id`).add({
+    //   taskSessions: {
+    //     taskName: this.state.taskName,
+    //     date: today,
+    //     rounds: this.state.counter,
+    // }
+    // })
   }
 
   tick = () => {
@@ -113,32 +115,30 @@ class Timer extends Component {
 
   handleSubmit = (e) => {
     e.preventDefault();
-    const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now())
-    const newId = data.tasks.length + 1
+    const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now());
+    const sessionRef = db.collection(`${this.state.taskName}`);
+    const taskSessionId = sessionRef.id; //// I'm trying to access the document id so I can update the rounds
+                                         //// on that specific section, this doesn't do it. I will need help figuring this out
+    let docData = {
+      taskSessions: {
+          taskName: this.state.taskName,
+          date: today,
+          rounds: 0,
+      }
+    }
     this.setState({ 
       focusTime: this.state.userFocusTime * 1000 * 60,
       breakTime: this.state.userBreakTime * 1000 * 60,
-      taskName: this.state.taskName
+      taskName: this.state.taskName,
+      onBreak: false,
+      counter: 0, 
      })
-     //adding record to tasks array
-     data.tasks.push({
-          id: newId,
-          taskName: this.state.taskName,
-          date: today,
-          rounds: 0,
-          focusMinutes: parseInt(this.state.userFocusTime),
-          breakMinutes: parseInt(this.state.userBreakTime),
-     })
-     console.log(data.tasks[3])
-     //creates record in firebase
-      //TODO: if task name already exists and date matches today's date then update rounds, otherwise create new task session entry
-    //  taskDetailRef.add({
-    //    id: 4,
-    //    taskName: this.state.taskName,
-    //    date: today,
-    //    rounds: this.state.counter
-    //  })
-    
+     db.collection(`${this.state.taskName}`).doc().set(docData);
+
+     this.setState({
+      sessionId: taskSessionId
+    })
+    console.log(sessionRef.id.taskSessions);
     this.taskNameInput.current.value = ''
     this.focusInput.current.value = ''
     this.breakInput.current.value = ''
