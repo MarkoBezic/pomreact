@@ -16,6 +16,6 @@ firebase.initializeApp(config)
 
 const db = firebase.firestore()
 
-// const taskDetailRef = db.collection('taskDetail')
+const taskInstancesRef = db.collection('taskInstances')
 
-export { db }
+export { taskInstancesRef }

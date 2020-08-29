@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import {Howl} from 'howler';
-import { db }  from '../firebase'
+import { taskInstancesRef }  from '../firebase'
 import data from '../sampleData'
 
 const audioClips = [
@@ -35,16 +35,13 @@ class Timer extends Component {
   }
 
   updateRoundsTotal = () => {
-    //not doing what I want it too//
 
-    // const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now())
-    // db.collection(`${this.state.taskName}.id`).add({
-    //   taskSessions: {
-    //     taskName: this.state.taskName,
-    //     date: today,
-    //     rounds: this.state.counter,
-    // }
-    // })
+    const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now())
+    taskInstancesRef.add({
+        taskName: this.state.taskName,
+        date: today,
+        rounds: this.state.counter,
+    })
   }
 
   tick = () => {
@@ -116,32 +113,28 @@ class Timer extends Component {
   handleSubmit = (e) => {
     e.preventDefault();
     const today = new Intl.DateTimeFormat('en-US', {year: 'numeric', month: '2-digit', day: '2-digit'}).format(Date.now());
-    const sessionRef = db.collection(`${this.state.taskName}`);
-    const taskSessionId = sessionRef.id; //// I'm trying to access the document id so I can update the rounds
-                                         //// on that specific section, this doesn't do it. I will need help figuring this out
+    
     let docData = {
-      taskSessions: {
           taskName: this.state.taskName,
           date: today,
           rounds: 0,
-      }
     }
+    taskInstancesRef.add({docData});
+    
     this.setState({ 
       focusTime: this.state.userFocusTime * 1000 * 60,
       breakTime: this.state.userBreakTime * 1000 * 60,
       taskName: this.state.taskName,
       onBreak: false,
       counter: 0, 
+      // taskInstancesId: ////get the task instance ID///
      })
-     db.collection(`${this.state.taskName}`).doc().set(docData);
-
-     this.setState({
-      sessionId: taskSessionId
-    })
-    console.log(sessionRef.id.taskSessions);
+    
     this.taskNameInput.current.value = ''
     this.focusInput.current.value = ''
     this.breakInput.current.value = ''
+
+    
   }
 
   render() { 
