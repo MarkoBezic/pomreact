@@ -1,5 +1,5 @@
-import firebase from 'firebase/app'
-import 'firebase/firestore'
+import firebase from "firebase/app";
+import "firebase/firestore";
 
 const config = {
   apiKey: "AIzaSyAUp13B8qq3b1ww9ieGL5km-UnMJTyhQ_0",
@@ -9,13 +9,14 @@ const config = {
   storageBucket: "pomodoro-49fec.appspot.com",
   messagingSenderId: "345458702982",
   appId: "1:345458702982:web:fd04e2ff6c195adab0af07",
-  measurementId: "G-L2QEYDF9B4"
-}
+  measurementId: "G-L2QEYDF9B4",
+};
 
-firebase.initializeApp(config)
+firebase.initializeApp(config);
 
-const db = firebase.firestore()
+const db = firebase.firestore();
 
-const taskInstancesRef = db.collection('taskInstances')
+const tasksRef = db.collection("tasks");
+const taskRoundsRef = db.collection("taskRoundEntry");
 
-export { taskInstancesRef }
+export { tasksRef, taskRoundsRef };
