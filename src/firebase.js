@@ -16,7 +16,7 @@ firebase.initializeApp(config);
 
 const db = firebase.firestore();
 
-const tasksRef = db.collection("tasks");
+const masterTasksRef = db.collection("masterTasks");
 const taskRoundsRef = db.collection("taskRoundEntry");
 
-export { tasksRef, taskRoundsRef };
+export { masterTasksRef, taskRoundsRef };

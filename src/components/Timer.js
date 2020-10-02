@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Howl } from "howler";
-import { tasksRef, taskRoundsRef } from "../firebase";
+import { masterTasksRef, taskRoundsRef } from "../firebase";
 import data from "../sampleData";
 
 const audioClips = [
@@ -40,31 +40,36 @@ class Timer extends Component {
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100);
     // collectionSize from stackoverflow: https://stackoverflow.com/questions/46554091/cloud-firestore-collection-count
-    let collectionSize = tasksRef
+    // check collectionSize and put it in state for use in calculating taskId for new master tasks in handleSubmit
+    let collectionSize = masterTasksRef
       .get()
       .then((snap) => {
         let size = snap.size;
         return size;
       })
       .then((val) => this.setState({ taskCollectionSize: val }));
-
-    // let getTaskName = tasksRef.get().then(() => {
-    //   console.log(tasksRef.doc(this.state.taskName));
-    // });
-
-    // .then(() => {
-    //   if (this.state.taskName) {
-    //     console.log("createdAt: ", this.state.taskName.data().createdAt);
-    //   } else {
-    //     console.log("No such document exists");
-    //   }
-    // })
-    // .catch(function (error) {
-    //   console.log("Error getting document: ", error);
-    // });
   }
 
+  // I wasn't able to figure out this block of code
+  // trying to figure out how to increase total rounds in masterTask record each time a round is completed
   addCompletedTaskRound = () => {
+    const docRef = masterTasksRef.doc(`${this.state.taskName}`);
+    const masterTaskId = docRef
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          console.log(doc.data().id);
+          return doc.data().id;
+        } else {
+          console.log("No such document!");
+        }
+      })
+      .catch((error) => {
+        console.log("Error getting document:", error);
+      });
+
+    console.log("masterTaskId", masterTaskId);
+
     const currentDate = new Intl.DateTimeFormat("en", {
       year: "numeric",
       month: "short",
@@ -77,16 +82,12 @@ class Timer extends Component {
     }).format(Date.now());
 
     taskRoundsRef.add({
-      id: 100,
-      parentTaskId: 1,
+      parentTaskId: 1, // How do I get this to update with its corresponding masterTask record id?
       taskName: this.state.taskName,
       date: currentDate,
       startTime: this.state.startTime,
       endTime: currentTime,
     });
-
-    //TODO: currently only logging start time of main task, need update logic
-    //to set state of startTime of each subsequent round
   };
 
   tick = () => {
@@ -181,13 +182,10 @@ class Timer extends Component {
       second: "2-digit",
     }).format(Date.now());
 
-    //trying to check if master task record already exists to avoid updating its ID on submit. Or alert the user that
-    //task already exists and they should resume the existing master task
-    let getTaskName = tasksRef.get().then(() => {
-      console.log("log task names from the tasks selection here");
-    });
-
-    tasksRef.doc(this.state.taskName).set({
+    //This is where I'm stuck
+    //if name being submitted is equal to a name for exisiting master task, thaen alert user that it already exists
+    //and they should resume existing timer otherwise execute logic below
+    masterTasksRef.doc(this.state.taskName).set({
       id: taskId + 1,
       name: this.state.taskName,
       completedRoundsCount: 0,
@@ -204,7 +202,6 @@ class Timer extends Component {
       onBreak: false,
       counter: 0,
       startTime: currentTime,
-      // taskInstancesId: ////get the task instance ID///
     });
 
     this.taskNameInput.current.value = "";
@@ -315,21 +312,25 @@ class Timer extends Component {
                     <th>Resume</th>
                     <th>Delete</th>
                   </tr>
+                  {/* how do I populate this with data firebase instead of my sample data file? */}
                   {data.tasks.map((task, index) => (
                     <tr key={index}>
                       <td>{task.taskName}: </td>
                       <td className="text-center">{task.rounds}</td>
                       <td>
+                        {/* add functionality to edit a record */}
                         <button className="btn btn-primary ml-1 mr-1 mt-1">
                           Edit
                         </button>
                       </td>
                       <td>
+                        {/* add functionality to resume button to continue a time that has already been created */}
                         <button className="btn btn-primary ml-1 mr-1 mt-1">
                           Resume
                         </button>
                       </td>
                       <td>
+                        {/* add functionality to delete a record */}
                         <button className="btn btn-primary ml-1 mr-1 mt-1">
                           Delete
                         </button>
