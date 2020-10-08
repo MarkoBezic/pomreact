@@ -1,18 +1,19 @@
-import React, { Component } from "react";
-import { Howl } from "howler";
-import { masterTasksRef, taskRoundsRef } from "../firebase";
-import data from "../sampleData";
+import React, { Component } from 'react';
+import { Howl } from 'howler';
+import { masterTasksRef, taskRoundsRef } from '../firebase';
+import data from '../sampleData';
 
 const audioClips = [
   {
     sound:
-      "http://soundbible.com/mp3/Boxing%20Mma%20Or%20Wrestling%20Bell-SoundBible.com-252285194.mp3",
+      'http://soundbible.com/mp3/Boxing%20Mma%20Or%20Wrestling%20Bell-SoundBible.com-252285194.mp3',
   },
   {
     sound:
-      "http://soundbible.com/mp3/Temple%20Bell-SoundBible.com-756181215.mp3",
+      'http://soundbible.com/mp3/Temple%20Bell-SoundBible.com-756181215.mp3',
   },
 ];
+
 class Timer extends Component {
   state = {
     isRunning: false,
@@ -21,15 +22,17 @@ class Timer extends Component {
     counter: 0,
     focusTime: 1500000,
     breakTime: 300000,
-    userFocusTime: "",
-    userBreakTime: "",
-    taskName: "",
-    sessionId: "",
+    userFocusTime: '',
+    userBreakTime: '',
+    taskName: '',
+    sessionId: '',
     taskCollectionSize: 0,
-    startTime: "",
+    startTime: '',
+    createTimerSucces: '',
+    masterTasks: [],
   };
 
-  soundPlay = (src) => {
+  soundPlay = src => {
     const sound = new Howl({
       src,
       html5: true,
@@ -37,17 +40,34 @@ class Timer extends Component {
     sound.play();
   };
 
+  getAllMasterTasks = async () => {
+    const allMasterTasks = await masterTasksRef.get();
+    let masterTasksList = [];
+    allMasterTasks.forEach(parentTask => {
+      masterTasksList.push(parentTask.data());
+    });
+    this.setState({ masterTasks: masterTasksList });
+    console.log(this.state.masterTasks);
+  };
+
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100);
+
+    this.getAllMasterTasks();
+
     // collectionSize from stackoverflow: https://stackoverflow.com/questions/46554091/cloud-firestore-collection-count
     // check collectionSize and put it in state for use in calculating taskId for new master tasks in handleSubmit
     let collectionSize = masterTasksRef
       .get()
-      .then((snap) => {
+      .then(snap => {
         let size = snap.size;
         return size;
       })
-      .then((val) => this.setState({ taskCollectionSize: val }));
+      .then(val => this.setState({ taskCollectionSize: val }));
+  }
+
+  componentDidUpdate() {
+    this.getAllMasterTasks();
   }
 
   // I wasn't able to figure out this block of code
@@ -56,29 +76,29 @@ class Timer extends Component {
     const docRef = masterTasksRef.doc(`${this.state.taskName}`);
     const masterTaskId = docRef
       .get()
-      .then((doc) => {
+      .then(doc => {
         if (doc.exists) {
           console.log(doc.data().id);
           return doc.data().id;
         } else {
-          console.log("No such document!");
+          console.log('No such document!');
         }
       })
-      .catch((error) => {
-        console.log("Error getting document:", error);
+      .catch(error => {
+        console.log('Error getting document:', error);
       });
 
-    console.log("masterTaskId", masterTaskId);
+    console.log('masterTaskId', masterTaskId);
 
-    const currentDate = new Intl.DateTimeFormat("en", {
-      year: "numeric",
-      month: "short",
-      day: "2-digit",
+    const currentDate = new Intl.DateTimeFormat('en', {
+      year: 'numeric',
+      month: 'short',
+      day: '2-digit',
     }).format(Date.now());
-    const currentTime = new Intl.DateTimeFormat("en", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
+    const currentTime = new Intl.DateTimeFormat('en', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     }).format(Date.now());
 
     taskRoundsRef.add({
@@ -92,7 +112,7 @@ class Timer extends Component {
 
   tick = () => {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
-      this.setState((prevState) => ({
+      this.setState(prevState => ({
         onBreak: true,
         focusTime:
           this.state.userFocusTime <= 0
@@ -113,13 +133,13 @@ class Timer extends Component {
       this.soundPlay(audioClips[1].sound);
     } else if (this.state.isRunning && !this.state.onBreak) {
       const now = Date.now();
-      this.setState((prevState) => ({
+      this.setState(prevState => ({
         previousTime: now,
         focusTime: prevState.focusTime - (now - this.state.previousTime),
       }));
     } else if (this.state.isRunning && this.state.onBreak) {
       const now = Date.now();
-      this.setState((prevState) => ({
+      this.setState(prevState => ({
         previousTime: now,
         breakTime: prevState.breakTime - (now - this.state.previousTime),
       }));
@@ -127,7 +147,7 @@ class Timer extends Component {
   };
 
   handleTimer = () => {
-    this.setState((prevState) => ({
+    this.setState(prevState => ({
       isRunning: !prevState.isRunning,
     }));
     if (!this.state.isRunning) {
@@ -139,14 +159,14 @@ class Timer extends Component {
     if (!this.state.onBreak) {
       this.setState({
         focusTime:
-          this.state.userFocusTime === ""
+          this.state.userFocusTime === ''
             ? 1500000
             : this.state.userFocusTime * 1000 * 60,
       });
     } else {
       this.setState({
         breakTime:
-          this.state.userBreakTime === ""
+          this.state.userBreakTime === ''
             ? 300000
             : this.state.userBreakTime * 1000 * 60,
       });
@@ -163,7 +183,7 @@ class Timer extends Component {
   focusInput = React.createRef();
   breakInput = React.createRef();
 
-  handleInputChange = (e) => {
+  handleInputChange = e => {
     const target = e.target;
     const value = target.value;
     const name = target.name;
@@ -172,41 +192,67 @@ class Timer extends Component {
     });
   };
 
-  handleSubmit = (e) => {
+  handleSubmit = e => {
     e.preventDefault();
-    const now = new Date();
-    const taskId = this.state.taskCollectionSize;
-    const currentTime = new Intl.DateTimeFormat("en", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }).format(Date.now());
+    //assuming that masterTasks have unique names
+    let taskName = this.state.taskName;
+    const self = this;
 
-    //This is where I'm stuck
-    //if name being submitted is equal to a name for exisiting master task, thaen alert user that it already exists
-    //and they should resume existing timer otherwise execute logic below
-    masterTasksRef.doc(this.state.taskName).set({
-      id: taskId + 1,
-      name: this.state.taskName,
-      completedRoundsCount: 0,
-      createdAt: now,
-      updatedAt: 0,
-      focusTime: this.state.userFocusTime,
-      breakTime: this.state.userBreakTime,
-    });
+    masterTasksRef
+      .where('name', '==', self.state.taskName)
+      .get()
+      .then(function (querySnapshot) {
+        let masterTasks = [];
+        querySnapshot.forEach(function (doc) {
+          // doc.data() is never undefined for query doc snapshots
+          console.log(doc.id, ' => ', doc.data());
+          masterTasks.push(doc.data());
+        });
+        if (masterTasks.length === 0) {
+          console.log('no masterTasks found for ' + taskName);
+          const now = new Date();
+          const taskId = self.state.taskCollectionSize;
+          const currentTime = new Intl.DateTimeFormat('en', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }).format(Date.now());
 
-    this.setState({
-      focusTime: this.state.userFocusTime * 1000 * 60,
-      breakTime: this.state.userBreakTime * 1000 * 60,
-      taskName: this.state.taskName,
-      onBreak: false,
-      counter: 0,
-      startTime: currentTime,
-    });
+          masterTasksRef.doc(self.state.taskName).set({
+            id: taskId + 1, //this will need to be the GUID
+            name: self.state.taskName, //@marko todo: remove name, let GUID populate on its own
+            completedRoundsCount: 0,
+            createdAt: now, //@marko todo look into pulling date and time directly from Firebase
+            updatedAt: now,
+            focusTime: self.state.userFocusTime,
+            breakTime: self.state.userBreakTime,
+          });
+          // @marko todo create a function for the block below
 
-    this.taskNameInput.current.value = "";
-    this.focusInput.current.value = "";
-    this.breakInput.current.value = "";
+          self.setState({
+            focusTime: self.state.userFocusTime * 1000 * 60,
+            breakTime: self.state.userBreakTime * 1000 * 60,
+            taskName: self.state.taskName,
+            onBreak: false,
+            counter: 0,
+            startTime: currentTime,
+            createTimerSucces: true,
+          });
+
+          self.taskNameInput.current.value = '';
+          self.focusInput.current.value = '';
+          self.breakInput.current.value = '';
+        } else {
+          self.setState({
+            createTimerSucces: false,
+          });
+          console.log('master task already exists, please rename task');
+        }
+        console.log('running');
+      })
+      .catch(function (error) {
+        console.log('Error getting documents: ', error);
+      });
   };
 
   render() {
@@ -216,12 +262,12 @@ class Timer extends Component {
     let minutes = Math.floor(time / 60);
     let seconds = time % 60;
 
-    seconds = seconds < 10 ? "0" + seconds : seconds;
-    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
 
     return (
       <>
-        <div className={`container ${this.state.onBreak ? "bg-danger" : ""}`}>
+        <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
               <form className="" onSubmit={this.handleSubmit}>
@@ -250,9 +296,29 @@ class Timer extends Component {
               </form>
             </div>
           </div>
+          {this.state.createTimerSucces === '' ? (
+            ''
+          ) : this.state.createTimerSucces ? (
+            <div className="row">
+              <div className="col d-flex justify-content-center">
+                <span className="pt-4 text-white font-weight-bold">
+                  New timer created
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="row">
+              <div className="col d-flex justify-content-center">
+                <span className="pt-4 text-white font-weight-bold">
+                  Timer already exists for this task. Please resume existing
+                  timer
+                </span>
+              </div>
+            </div>
+          )}
           <div className="row">
             <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
-              <span>{this.state.taskName ? this.state.taskName : "Task"}</span>
+              <span>{this.state.taskName ? this.state.taskName : 'Task'}</span>
             </div>
           </div>
           <div className="row">
@@ -269,7 +335,7 @@ class Timer extends Component {
                 className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
                 onClick={this.handleTimer}
               >
-                {this.state.isRunning ? "Stop" : "Start"}
+                {this.state.isRunning ? 'Stop' : 'Start'}
               </button>
               <button
                 type="button"
@@ -287,7 +353,7 @@ class Timer extends Component {
                   Skip
                 </button>
               ) : (
-                ""
+                ''
               )}
             </div>
           </div>
@@ -312,11 +378,13 @@ class Timer extends Component {
                     <th>Resume</th>
                     <th>Delete</th>
                   </tr>
-                  {/* how do I populate this with data firebase instead of my sample data file? */}
-                  {data.tasks.map((task, index) => (
+                  {/* @marko  TODO refernce screenshot to read to data from firebase and populate on load*/}
+                  {this.state.masterTasks.map((task, index) => (
                     <tr key={index}>
-                      <td>{task.taskName}: </td>
-                      <td className="text-center">{task.rounds}</td>
+                      <td>{task.name} </td>
+                      <td className="text-center">
+                        {task.completedRoundsCount}
+                      </td>
                       <td>
                         {/* add functionality to edit a record */}
                         <button className="btn btn-primary ml-1 mr-1 mt-1">
