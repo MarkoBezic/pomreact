@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
-import { Howl } from 'howler';
-import { masterTasksRef, taskRoundsRef } from '../firebase';
-import data from '../sampleData';
+import React, { Component } from 'react'
+import { Howl } from 'howler'
+import { masterTasksRef, taskRoundsRef, timestamp } from '../firebase'
 
 const audioClips = [
   {
@@ -12,7 +11,7 @@ const audioClips = [
     sound:
       'http://soundbible.com/mp3/Temple%20Bell-SoundBible.com-756181215.mp3',
   },
-];
+]
 
 class Timer extends Component {
   state = {
@@ -30,85 +29,61 @@ class Timer extends Component {
     startTime: '',
     createTimerSucces: '',
     masterTasks: [],
-  };
+  }
 
   soundPlay = src => {
     const sound = new Howl({
       src,
       html5: true,
-    });
-    sound.play();
-  };
-
-  getAllMasterTasks = async () => {
-    const allMasterTasks = await masterTasksRef.get();
-    let masterTasksList = [];
-    allMasterTasks.forEach(parentTask => {
-      masterTasksList.push(parentTask.data());
-    });
-    this.setState({ masterTasks: masterTasksList });
-    console.log(this.state.masterTasks);
-  };
-
-  componentDidMount() {
-    this.intervalID = setInterval(() => this.tick(), 100);
-
-    this.getAllMasterTasks();
-
-    // collectionSize from stackoverflow: https://stackoverflow.com/questions/46554091/cloud-firestore-collection-count
-    // check collectionSize and put it in state for use in calculating taskId for new master tasks in handleSubmit
-    let collectionSize = masterTasksRef
-      .get()
-      .then(snap => {
-        let size = snap.size;
-        return size;
-      })
-      .then(val => this.setState({ taskCollectionSize: val }));
+    })
+    sound.play()
   }
 
+  getAllMasterTasks = async () => {
+    const allMasterTasks = await masterTasksRef.get()
+    let masterTasksList = []
+    allMasterTasks.forEach(parentTask => {
+      masterTasksList.push(parentTask.data())
+    })
+    this.setState({ masterTasks: masterTasksList })
+  }
+
+  componentDidMount() {
+    this.intervalID = setInterval(() => this.tick(), 100)
+
+    this.getAllMasterTasks()
+  }
   componentDidUpdate() {
-    this.getAllMasterTasks();
+    this.getAllMasterTasks()
   }
 
   // I wasn't able to figure out this block of code
   // trying to figure out how to increase total rounds in masterTask record each time a round is completed
   addCompletedTaskRound = () => {
-    const docRef = masterTasksRef.doc(`${this.state.taskName}`);
+    const docRef = masterTasksRef.doc(`${this.state.taskName}`)
     const masterTaskId = docRef
       .get()
       .then(doc => {
         if (doc.exists) {
-          console.log(doc.data().id);
-          return doc.data().id;
+          console.log(doc.data().id)
+          return doc.data().id
         } else {
-          console.log('No such document!');
+          console.log('No such document!')
         }
       })
       .catch(error => {
-        console.log('Error getting document:', error);
-      });
+        console.log('Error getting document:', error)
+      })
 
-    console.log('masterTaskId', masterTaskId);
-
-    const currentDate = new Intl.DateTimeFormat('en', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-    }).format(Date.now());
-    const currentTime = new Intl.DateTimeFormat('en', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    }).format(Date.now());
+    console.log('masterTaskId', masterTaskId)
 
     taskRoundsRef.add({
       parentTaskId: 1, // How do I get this to update with its corresponding masterTask record id?
       taskName: this.state.taskName,
-      date: currentDate,
       startTime: this.state.startTime,
-      endTime: currentTime,
-    });
-  };
+      endTime: timestamp.now(),
+    })
+  }
 
   tick = () => {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
@@ -119,9 +94,9 @@ class Timer extends Component {
             ? 1500000
             : this.state.userFocusTime * 1000 * 60,
         counter: prevState.counter + 1,
-      }));
-      this.soundPlay(audioClips[0].sound);
-      this.addCompletedTaskRound();
+      }))
+      this.soundPlay(audioClips[0].sound)
+      this.addCompletedTaskRound()
     } else if (this.state.breakTime < 1000 && this.state.onBreak) {
       this.setState({
         onBreak: false,
@@ -129,31 +104,31 @@ class Timer extends Component {
           this.state.userBreakTime <= 0
             ? 300000
             : this.state.userBreakTime * 1000 * 60,
-      });
-      this.soundPlay(audioClips[1].sound);
+      })
+      this.soundPlay(audioClips[1].sound)
     } else if (this.state.isRunning && !this.state.onBreak) {
-      const now = Date.now();
+      const now = Date.now()
       this.setState(prevState => ({
         previousTime: now,
         focusTime: prevState.focusTime - (now - this.state.previousTime),
-      }));
+      }))
     } else if (this.state.isRunning && this.state.onBreak) {
-      const now = Date.now();
+      const now = Date.now()
       this.setState(prevState => ({
         previousTime: now,
         breakTime: prevState.breakTime - (now - this.state.previousTime),
-      }));
+      }))
     }
-  };
+  }
 
   handleTimer = () => {
     this.setState(prevState => ({
       isRunning: !prevState.isRunning,
-    }));
+    }))
     if (!this.state.isRunning) {
-      this.setState({ previousTime: Date.now() });
+      this.setState({ previousTime: Date.now() })
     }
-  };
+  }
 
   handleReset = () => {
     if (!this.state.onBreak) {
@@ -162,71 +137,59 @@ class Timer extends Component {
           this.state.userFocusTime === ''
             ? 1500000
             : this.state.userFocusTime * 1000 * 60,
-      });
+      })
     } else {
       this.setState({
         breakTime:
           this.state.userBreakTime === ''
             ? 300000
             : this.state.userBreakTime * 1000 * 60,
-      });
+      })
     }
-  };
+  }
 
   handleSkip = () => {
     this.setState({
       onBreak: !this.state.onBreak,
-    });
-  };
+    })
+  }
 
-  taskNameInput = React.createRef();
-  focusInput = React.createRef();
-  breakInput = React.createRef();
+  taskNameInput = React.createRef()
+  focusInput = React.createRef()
+  breakInput = React.createRef()
 
   handleInputChange = e => {
-    const target = e.target;
-    const value = target.value;
-    const name = target.name;
+    const target = e.target
+    const value = target.value
+    const name = target.name
     this.setState({
       [name]: value,
-    });
-  };
+    })
+  }
 
   handleSubmit = e => {
-    e.preventDefault();
+    e.preventDefault()
     //assuming that masterTasks have unique names
-    let taskName = this.state.taskName;
-    const self = this;
+    const self = this
 
     masterTasksRef
       .where('name', '==', self.state.taskName)
       .get()
       .then(function (querySnapshot) {
-        let masterTasks = [];
+        let masterTasks = []
         querySnapshot.forEach(function (doc) {
-          // doc.data() is never undefined for query doc snapshots
-          console.log(doc.id, ' => ', doc.data());
-          masterTasks.push(doc.data());
-        });
+          console.log(doc.id, ' => ', doc.data())
+          masterTasks.push(doc.data())
+        })
         if (masterTasks.length === 0) {
-          console.log('no masterTasks found for ' + taskName);
-          const now = new Date();
-          const taskId = self.state.taskCollectionSize;
-          const currentTime = new Intl.DateTimeFormat('en', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          }).format(Date.now());
-
-          masterTasksRef.doc(self.state.taskName).set({
-            id: taskId + 1, //this will need to be the GUID
-            name: self.state.taskName, //@marko todo: remove name, let GUID populate on its own
+          masterTasksRef.doc().set({
+            name: self.state.taskName, 
             completedRoundsCount: 0,
-            createdAt: now, //@marko todo look into pulling date and time directly from Firebase
-            updatedAt: now,
+            createdAt: timestamp.now(),
+            updatedAt: timestamp.now(),
             focusTime: self.state.userFocusTime,
             breakTime: self.state.userBreakTime,
-          });
+          })
           // @marko todo create a function for the block below
 
           self.setState({
@@ -235,35 +198,35 @@ class Timer extends Component {
             taskName: self.state.taskName,
             onBreak: false,
             counter: 0,
-            startTime: currentTime,
+            startTime: timestamp.now(),
             createTimerSucces: true,
-          });
+          })
 
-          self.taskNameInput.current.value = '';
-          self.focusInput.current.value = '';
-          self.breakInput.current.value = '';
+          self.taskNameInput.current.value = ''
+          self.focusInput.current.value = ''
+          self.breakInput.current.value = ''
         } else {
           self.setState({
             createTimerSucces: false,
-          });
-          console.log('master task already exists, please rename task');
+          })
+          console.log('master task already exists, please rename task')
         }
-        console.log('running');
+        console.log('running')
       })
       .catch(function (error) {
-        console.log('Error getting documents: ', error);
-      });
-  };
+        console.log('Error getting documents: ', error)
+      })
+  }
 
   render() {
     let time = !this.state.onBreak
       ? Math.floor(this.state.focusTime / 1000)
-      : Math.floor(this.state.breakTime / 1000);
-    let minutes = Math.floor(time / 60);
-    let seconds = time % 60;
+      : Math.floor(this.state.breakTime / 1000)
+    let minutes = Math.floor(time / 60)
+    let seconds = time % 60
 
-    seconds = seconds < 10 ? '0' + seconds : seconds;
-    minutes = minutes < 10 ? '0' + minutes : minutes;
+    seconds = seconds < 10 ? '0' + seconds : seconds
+    minutes = minutes < 10 ? '0' + minutes : minutes
 
     return (
       <>
@@ -411,8 +374,8 @@ class Timer extends Component {
           </div>
         </div>
       </>
-    );
+    )
   }
 }
 
-export default Timer;
+export default Timer
