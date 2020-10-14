@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Howl } from 'howler'
-import { masterTasksRef, taskRoundsRef, timestamp } from '../firebase'
+import { masterTasksRef, taskRoundsRef } from '../firebase'
 
 const audioClips = [
   {
@@ -29,6 +29,7 @@ class Timer extends Component {
     startTime: '',
     createTimerSucces: '',
     masterTasks: [],
+    currentTimerGUID: "",
   }
 
   soundPlay = src => {
@@ -46,14 +47,11 @@ class Timer extends Component {
       masterTasksList.push(parentTask.data())
     })
     this.setState({ masterTasks: masterTasksList })
+    console.log(masterTasksList)
   }
 
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
-
-    this.getAllMasterTasks()
-  }
-  componentDidUpdate() {
     this.getAllMasterTasks()
   }
 
@@ -81,7 +79,7 @@ class Timer extends Component {
       parentTaskId: 1, // How do I get this to update with its corresponding masterTask record id?
       taskName: this.state.taskName,
       startTime: this.state.startTime,
-      endTime: timestamp.now(),
+      endTime: new Date(),
     })
   }
 
@@ -121,7 +119,8 @@ class Timer extends Component {
     }
   }
 
-  handleTimer = () => {
+  handleTimer = async () => {
+    
     this.setState(prevState => ({
       isRunning: !prevState.isRunning,
     }))
@@ -171,7 +170,18 @@ class Timer extends Component {
     e.preventDefault()
     //assuming that masterTasks have unique names
     const self = this
-
+    
+    let newTimerSetState = () => {
+      self.setState({
+            focusTime: self.state.userFocusTime * 1000 * 60,
+            breakTime: self.state.userBreakTime * 1000 * 60,
+            taskName: self.state.taskName,
+            onBreak: false,
+            counter: 0,
+            startTime: new Date(),
+            createTimerSucces: true,
+          })
+    }
     masterTasksRef
       .where('name', '==', self.state.taskName)
       .get()
@@ -185,23 +195,14 @@ class Timer extends Component {
           masterTasksRef.doc().set({
             name: self.state.taskName, 
             completedRoundsCount: 0,
-            createdAt: timestamp.now(),
-            updatedAt: timestamp.now(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
             focusTime: self.state.userFocusTime,
             breakTime: self.state.userBreakTime,
           })
-          // @marko todo create a function for the block below
-
-          self.setState({
-            focusTime: self.state.userFocusTime * 1000 * 60,
-            breakTime: self.state.userBreakTime * 1000 * 60,
-            taskName: self.state.taskName,
-            onBreak: false,
-            counter: 0,
-            startTime: timestamp.now(),
-            createTimerSucces: true,
-          })
-
+         
+          newTimerSetState();
+          
           self.taskNameInput.current.value = ''
           self.focusInput.current.value = ''
           self.breakInput.current.value = ''
@@ -216,6 +217,10 @@ class Timer extends Component {
       .catch(function (error) {
         console.log('Error getting documents: ', error)
       })
+  }
+
+  resumeTimer = (task)  => {
+    console.log(task.name)
   }
 
   render() {
@@ -341,7 +346,6 @@ class Timer extends Component {
                     <th>Resume</th>
                     <th>Delete</th>
                   </tr>
-                  {/* @marko  TODO refernce screenshot to read to data from firebase and populate on load*/}
                   {this.state.masterTasks.map((task, index) => (
                     <tr key={index}>
                       <td>{task.name} </td>

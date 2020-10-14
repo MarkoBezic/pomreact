@@ -19,6 +19,4 @@ const db = firebase.firestore();
 const masterTasksRef = db.collection("masterTasks");
 const taskRoundsRef = db.collection("taskRoundEntry");
 
-const timestamp = firebase.firestore.Timestamp
-
-export { masterTasksRef, taskRoundsRef, timestamp }
+export { masterTasksRef, taskRoundsRef }
