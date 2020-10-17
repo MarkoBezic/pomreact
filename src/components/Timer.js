@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { Howl } from 'howler'
 import { masterTasksRef, taskRoundsRef } from '../firebase'
+import Dashboard from './Dashboard'
+
 
 const audioClips = [
   {
@@ -29,7 +31,7 @@ class Timer extends Component {
     startTime: '',
     createTimerSucces: '',
     masterTasks: [],
-    currentTimerGUID: "",
+    masterTaskIds: [],
   }
 
   soundPlay = src => {
@@ -43,11 +45,17 @@ class Timer extends Component {
   getAllMasterTasks = async () => {
     const allMasterTasks = await masterTasksRef.get()
     let masterTasksList = []
+    let masterTaskIds = []
     allMasterTasks.forEach(parentTask => {
-      masterTasksList.push(parentTask.data())
+      const parentTaskVar = parentTask.data()
+      masterTasksList.push(parentTaskVar)
+      parentTaskVar['id'] = parentTask.id
+      masterTaskIds.push(parentTaskVar['id']);
     })
-    this.setState({ masterTasks: masterTasksList })
-    console.log(masterTasksList)
+    this.setState({ 
+      masterTasks: masterTasksList,
+      masterTaskIds: masterTaskIds
+    })
   }
 
   componentDidMount() {
@@ -55,30 +63,11 @@ class Timer extends Component {
     this.getAllMasterTasks()
   }
 
-  // I wasn't able to figure out this block of code
-  // trying to figure out how to increase total rounds in masterTask record each time a round is completed
   addCompletedTaskRound = () => {
-    const docRef = masterTasksRef.doc(`${this.state.taskName}`)
-    const masterTaskId = docRef
-      .get()
-      .then(doc => {
-        if (doc.exists) {
-          console.log(doc.data().id)
-          return doc.data().id
-        } else {
-          console.log('No such document!')
-        }
-      })
-      .catch(error => {
-        console.log('Error getting document:', error)
-      })
-
-    console.log('masterTaskId', masterTaskId)
-
     taskRoundsRef.add({
       parentTaskId: 1, // How do I get this to update with its corresponding masterTask record id?
-      taskName: this.state.taskName,
-      startTime: this.state.startTime,
+      taskName: this.state.taskName * 1000 * 60,
+      startTime: this.state.startTime * 1000 * 60,
       endTime: new Date(),
     })
   }
@@ -165,7 +154,17 @@ class Timer extends Component {
       [name]: value,
     })
   }
+  resumeExistingTimer = (e, name, focusTime, breakTime ) => {
+    e.preventDefault()
+    let existingFocusTime = focusTime * 1000 * 60
+    let existingBreakTime = breakTime * 1000 * 60
+    this.setState({
+      taskName: name,
+      focusTime: existingFocusTime,
+      breakTime: existingBreakTime,
+    })
 
+  }
   handleSubmit = e => {
     e.preventDefault()
     //assuming that masterTasks have unique names
@@ -181,6 +180,9 @@ class Timer extends Component {
             startTime: new Date(),
             createTimerSucces: true,
           })
+          self.taskNameInput.current.value = ''
+          self.focusInput.current.value = ''
+          self.breakInput.current.value = ''
     }
     masterTasksRef
       .where('name', '==', self.state.taskName)
@@ -200,12 +202,7 @@ class Timer extends Component {
             focusTime: self.state.userFocusTime,
             breakTime: self.state.userBreakTime,
           })
-         
-          newTimerSetState();
-          
-          self.taskNameInput.current.value = ''
-          self.focusInput.current.value = ''
-          self.breakInput.current.value = ''
+          newTimerSetState()      
         } else {
           self.setState({
             createTimerSucces: false,
@@ -217,10 +214,6 @@ class Timer extends Component {
       .catch(function (error) {
         console.log('Error getting documents: ', error)
       })
-  }
-
-  resumeTimer = (task)  => {
-    console.log(task.name)
   }
 
   render() {
@@ -337,43 +330,11 @@ class Timer extends Component {
               div
               className="col d-flex justify-content-center pt-4 text-white"
             >
-              <table>
-                <thead>
-                  <tr>
-                    <th>Task</th>
-                    <th className="pr-3">Total Rounds:</th>
-                    <th>Edit</th>
-                    <th>Resume</th>
-                    <th>Delete</th>
-                  </tr>
-                  {this.state.masterTasks.map((task, index) => (
-                    <tr key={index}>
-                      <td>{task.name} </td>
-                      <td className="text-center">
-                        {task.completedRoundsCount}
-                      </td>
-                      <td>
-                        {/* add functionality to edit a record */}
-                        <button className="btn btn-primary ml-1 mr-1 mt-1">
-                          Edit
-                        </button>
-                      </td>
-                      <td>
-                        {/* add functionality to resume button to continue a time that has already been created */}
-                        <button className="btn btn-primary ml-1 mr-1 mt-1">
-                          Resume
-                        </button>
-                      </td>
-                      <td>
-                        {/* add functionality to delete a record */}
-                        <button className="btn btn-primary ml-1 mr-1 mt-1">
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </thead>
-              </table>
+              <Dashboard 
+                {...this.props}
+                masterTasks={this.state.masterTasks} 
+                resumeExistingTimer={this.resumeExistingTimer}  
+                />
             </div>
           </div>
         </div>
@@ -383,3 +344,4 @@ class Timer extends Component {
 }
 
 export default Timer
+
