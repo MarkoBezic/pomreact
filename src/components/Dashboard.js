@@ -37,8 +37,8 @@ class Dashboard extends Component {
                 <button className="btn btn-primary ml-1 mr-1 mt-1" 
                   onClick={(e) =>  
                   {
-                    const {name, focusTime, breakTime} = task
-                    this.props.resumeExistingTimer(e, name, focusTime, breakTime)
+                    const {name, focusTime, breakTime, id} = task
+                    this.props.resumeExistingTimer(e, name, focusTime, breakTime, id)
                     }}
                     >Resume
                 </button>

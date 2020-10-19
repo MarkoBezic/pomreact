@@ -32,7 +32,10 @@ class Timer extends Component {
     createTimerSucces: '',
     masterTasks: [],
     masterTaskIds: [],
+    currentMasterTaskId: ""
   }
+
+
 
   soundPlay = src => {
     const sound = new Howl({
@@ -58,6 +61,20 @@ class Timer extends Component {
     })
   }
 
+  getCurrentMasterTaskId = async () => {
+    await masterTasksRef.where("name", "==", this.state.taskName)
+    .get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+          this.setState({
+            currentMasterTaskId: doc.id
+          })
+      });
+  })
+  .catch((error) => {
+      console.log("Error getting documents: ", error);
+  });
+  }
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
     this.getAllMasterTasks()
@@ -65,9 +82,9 @@ class Timer extends Component {
 
   addCompletedTaskRound = () => {
     taskRoundsRef.add({
-      parentTaskId: 1, // How do I get this to update with its corresponding masterTask record id?
-      taskName: this.state.taskName * 1000 * 60,
-      startTime: this.state.startTime * 1000 * 60,
+      parentTaskId: this.state.currentMasterTaskId,
+      taskName: this.state.taskName,
+      startTime: this.state.startTime,
       endTime: new Date(),
     })
   }
@@ -132,6 +149,7 @@ class Timer extends Component {
           this.state.userBreakTime === ''
             ? 300000
             : this.state.userBreakTime * 1000 * 60,
+        onBreak: false,
       })
     }
   }
@@ -154,7 +172,7 @@ class Timer extends Component {
       [name]: value,
     })
   }
-  resumeExistingTimer = (e, name, focusTime, breakTime ) => {
+  resumeExistingTimer = (e, name, focusTime, breakTime, id ) => {
     e.preventDefault()
     let existingFocusTime = focusTime * 1000 * 60
     let existingBreakTime = breakTime * 1000 * 60
@@ -162,13 +180,28 @@ class Timer extends Component {
       taskName: name,
       focusTime: existingFocusTime,
       breakTime: existingBreakTime,
+      currentMasterTaskId: id,
     })
-
   }
   handleSubmit = e => {
     e.preventDefault()
     //assuming that masterTasks have unique names
     const self = this
+
+    let getCurrentMasterTaskId = async () => {
+      await masterTasksRef.where("name", "==", self.state.taskName)
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+            self.setState({
+              currentMasterTaskId: doc.id
+            })
+        });
+    })
+    .catch((error) => {
+        console.log("Error getting documents: ", error);
+    });
+    }
     
     let newTimerSetState = () => {
       self.setState({
@@ -202,14 +235,14 @@ class Timer extends Component {
             focusTime: self.state.userFocusTime,
             breakTime: self.state.userBreakTime,
           })
-          newTimerSetState()      
+          newTimerSetState()  
+          getCurrentMasterTaskId()  
         } else {
           self.setState({
             createTimerSucces: false,
           })
           console.log('master task already exists, please rename task')
         }
-        console.log('running')
       })
       .catch(function (error) {
         console.log('Error getting documents: ', error)
@@ -228,6 +261,7 @@ class Timer extends Component {
 
     return (
       <>
+      {/* <button onClick={}>Test</button> */}
         <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
