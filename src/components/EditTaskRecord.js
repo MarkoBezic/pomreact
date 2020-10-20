@@ -1,11 +1,15 @@
-import React from 'react'
+import React, { Component } from 'react'
 
-const EditTaskRecord = () => {
-  return (
+class EditTaskRecord extends Component {
+
+  render() {
+    return (
       <div>
         HELLOOOOO ROUTERRRRRR
       </div>
   )
+  }
+  
 }
 
 export default EditTaskRecord

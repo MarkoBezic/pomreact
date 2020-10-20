@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Howl } from 'howler'
-import { masterTasksRef, taskRoundsRef } from '../firebase'
+import { increment, masterTasksRef, taskRoundsRef } from '../firebase'
 import Dashboard from './Dashboard'
 
 
@@ -26,10 +26,10 @@ class Timer extends Component {
     userFocusTime: '',
     userBreakTime: '',
     taskName: '',
-    sessionId: '',
     taskCollectionSize: 0,
     startTime: '',
     createTimerSucces: '',
+    createdAt: '',
     masterTasks: [],
     masterTaskIds: [],
     currentMasterTaskId: ""
@@ -75,6 +75,7 @@ class Timer extends Component {
       console.log("Error getting documents: ", error);
   });
   }
+
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
     this.getAllMasterTasks()
@@ -87,6 +88,9 @@ class Timer extends Component {
       startTime: this.state.startTime,
       endTime: new Date(),
     })
+    masterTasksRef.doc(`${this.state.currentMasterTaskId}`).update({
+      completedRoundsCount: increment
+    })
   }
 
   tick = () => {
@@ -96,7 +100,7 @@ class Timer extends Component {
         focusTime:
           this.state.userFocusTime <= 0
             ? 1500000
-            : this.state.userFocusTime * 1000 * 60,
+            : this.state.userFocusTime,
         counter: prevState.counter + 1,
       }))
       this.soundPlay(audioClips[0].sound)
@@ -107,7 +111,7 @@ class Timer extends Component {
         breakTime:
           this.state.userBreakTime <= 0
             ? 300000
-            : this.state.userBreakTime * 1000 * 60,
+            : this.state.userBreakTime,
       })
       this.soundPlay(audioClips[1].sound)
     } else if (this.state.isRunning && !this.state.onBreak) {
@@ -131,24 +135,26 @@ class Timer extends Component {
       isRunning: !prevState.isRunning,
     }))
     if (!this.state.isRunning) {
-      this.setState({ previousTime: Date.now() })
+      this.setState({ 
+        previousTime: Date.now(),
+        startTime: new Date(),
+      })
     }
   }
 
   handleReset = () => {
-    if (!this.state.onBreak) {
+    this.setState({
+      focusTime:
+        this.state.userFocusTime === ''
+          ? 1500000
+          : this.state.userFocusTime,
+      breakTime:
+        this.state.userBreakTime === ''
+          ? 300000
+          : this.state.userBreakTime,
+    })
+    if (this.state.onBreak) {
       this.setState({
-        focusTime:
-          this.state.userFocusTime === ''
-            ? 1500000
-            : this.state.userFocusTime * 1000 * 60,
-      })
-    } else {
-      this.setState({
-        breakTime:
-          this.state.userBreakTime === ''
-            ? 300000
-            : this.state.userBreakTime * 1000 * 60,
         onBreak: false,
       })
     }
@@ -158,6 +164,7 @@ class Timer extends Component {
     this.setState({
       onBreak: !this.state.onBreak,
     })
+    this.handleReset()
   }
 
   taskNameInput = React.createRef()
@@ -180,6 +187,8 @@ class Timer extends Component {
       taskName: name,
       focusTime: existingFocusTime,
       breakTime: existingBreakTime,
+      userFocusTime: existingFocusTime,
+      userBreakTime:  existingBreakTime,
       currentMasterTaskId: id,
     })
   }
@@ -205,12 +214,14 @@ class Timer extends Component {
     
     let newTimerSetState = () => {
       self.setState({
-            focusTime: self.state.userFocusTime * 1000 * 60,
-            breakTime: self.state.userBreakTime * 1000 * 60,
+            focusTime: self.state.userFocusTime * 60000,
+            breakTime: self.state.userBreakTime * 60000,
+            userFocusTime: self.state.userFocusTime * 60000,
+            userBreakTime: self.state.userBreakTime * 60000,
             taskName: self.state.taskName,
             onBreak: false,
             counter: 0,
-            startTime: new Date(),
+            createdAt: new Date(), // @marko todo this needs to be createdAt
             createTimerSucces: true,
           })
           self.taskNameInput.current.value = ''

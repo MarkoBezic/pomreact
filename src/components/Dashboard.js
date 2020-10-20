@@ -23,7 +23,7 @@ class Dashboard extends Component {
               <td>{task.name} </td>
               <td className="text-center">
                 {task.completedRoundsCount}
-              </td>
+                </td>
               <td>
                 {/* add functionality to edit a record */}
                 
