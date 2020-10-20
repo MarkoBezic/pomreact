@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 
 class Dashboard extends Component {
 
+  
+
     redirectToEdit = () => {
       this.props.history.push(`/edit-task-record`)
     }
@@ -38,14 +40,19 @@ class Dashboard extends Component {
                   onClick={(e) =>  
                   {
                     const {name, focusTime, breakTime, id} = task
-                    this.props.resumeExistingTimer(e, name, focusTime, breakTime, id)
+                    this.props.handleResumeExistingTimer(e, name, focusTime, breakTime, id)
                     }}
                     >Resume
                 </button>
               </td>
               <td>
                 {/* add functionality to delete a record */}
-                <button className="btn btn-primary ml-1 mr-1 mt-1">
+                <button className="btn btn-primary ml-1 mr-1 mt-1"
+
+                        onClick={(e) => {
+                          this.props.handleDeleteTimer(e, task.id)
+                        }}
+                >
                   Delete
                 </button>
               </td>

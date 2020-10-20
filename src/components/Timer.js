@@ -179,7 +179,7 @@ class Timer extends Component {
       [name]: value,
     })
   }
-  resumeExistingTimer = (e, name, focusTime, breakTime, id ) => {
+  handleResumeExistingTimer = (e, name, focusTime, breakTime, id ) => {
     e.preventDefault()
     let existingFocusTime = focusTime * 1000 * 60
     let existingBreakTime = breakTime * 1000 * 60
@@ -191,6 +191,14 @@ class Timer extends Component {
       userBreakTime:  existingBreakTime,
       currentMasterTaskId: id,
     })
+  }
+  handleDeleteTimer = (e, id) => {
+    e.preventDefault()
+    masterTasksRef.doc(id).delete().then(function() {
+      console.log("Document successfully deleted!");
+      }).catch(function(error) {
+          console.error("Error removing document: ", error);
+      });
   }
   handleSubmit = e => {
     e.preventDefault()
@@ -378,7 +386,8 @@ class Timer extends Component {
               <Dashboard 
                 {...this.props}
                 masterTasks={this.state.masterTasks} 
-                resumeExistingTimer={this.resumeExistingTimer}  
+                handleResumeExistingTimer={this.handleResumeExistingTimer} 
+                handleDeleteTimer={this.handleDeleteTimer} 
                 />
             </div>
           </div>
