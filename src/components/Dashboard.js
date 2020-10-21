@@ -2,15 +2,12 @@ import React, { Component } from 'react'
 
 class Dashboard extends Component {
 
-  
-
     redirectToEdit = () => {
       this.props.history.push(`/edit-task-record`)
     }
-
-    render() { 
-    return (  
-     
+   
+  render() { 
+  return (  
       <table>
         <thead>
           <tr>
@@ -28,7 +25,6 @@ class Dashboard extends Component {
                 </td>
               <td>
                 {/* add functionality to edit a record */}
-                
                 <button className="btn btn-primary ml-1 mr-1 mt-1"
                         onClick={this.redirectToEdit}
                   >Edit
@@ -48,7 +44,6 @@ class Dashboard extends Component {
               <td>
                 {/* add functionality to delete a record */}
                 <button className="btn btn-primary ml-1 mr-1 mt-1"
-
                         onClick={(e) => {
                           this.props.handleDeleteTimer(e, task.id)
                         }}
@@ -60,7 +55,6 @@ class Dashboard extends Component {
           ))}
         </thead>
       </table>
-     
     );
   }
 }

@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import { Howl } from 'howler'
 import { increment, masterTasksRef, taskRoundsRef } from '../firebase'
 import Dashboard from './Dashboard'
+import { confirmAlert } from 'react-confirm-alert'
+import 'react-confirm-alert/src/react-confirm-alert.css';
 
 
 const audioClips = [
@@ -34,7 +36,6 @@ class Timer extends Component {
     masterTaskIds: [],
     currentMasterTaskId: ""
   }
-
 
 
   soundPlay = src => {
@@ -194,11 +195,37 @@ class Timer extends Component {
   }
   handleDeleteTimer = (e, id) => {
     e.preventDefault()
-    masterTasksRef.doc(id).delete().then(function() {
-      console.log("Document successfully deleted!");
-      }).catch(function(error) {
-          console.error("Error removing document: ", error);
-      });
+    confirmAlert({
+      title: 'Please confirm',
+      message: 'Are you sure you want to delete this task?',
+      buttons: [
+        {
+          label: 'Yes',
+          onClick: () => {
+            const task =  masterTasksRef.doc(id)
+            this.setState({
+              masterTasks: [
+                ...this.state.masterTasks.filter(task => {
+                  return task.id !== id
+                })
+              ]
+            })
+            task.delete().then(function() {
+                console.log("Document successfully deleted!");
+              }).catch(function(error) {
+                console.error("Error removing document: ", error);
+              });
+          }
+        },
+        {
+          label: 'No',
+          onClick: () => alert("Maybe next time! :)")
+        }
+      ]
+    });
+    
+    
+      
   }
   handleSubmit = e => {
     e.preventDefault()
@@ -229,7 +256,7 @@ class Timer extends Component {
             taskName: self.state.taskName,
             onBreak: false,
             counter: 0,
-            createdAt: new Date(), // @marko todo this needs to be createdAt
+            createdAt: new Date(), 
             createTimerSucces: true,
           })
           self.taskNameInput.current.value = ''
@@ -246,16 +273,20 @@ class Timer extends Component {
           masterTasks.push(doc.data())
         })
         if (masterTasks.length === 0) {
-          masterTasksRef.doc().set({
+          const newTask = {
             name: self.state.taskName, 
             completedRoundsCount: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
             focusTime: self.state.userFocusTime,
             breakTime: self.state.userBreakTime,
-          })
+          }
+          masterTasksRef.doc().set(newTask)
           newTimerSetState()  
-          getCurrentMasterTaskId()  
+          getCurrentMasterTaskId() 
+          self.setState({
+            masterTasks: [...self.state.masterTasks, newTask]
+          })
         } else {
           self.setState({
             createTimerSucces: false,
@@ -280,7 +311,7 @@ class Timer extends Component {
 
     return (
       <>
-      {/* <button onClick={}>Test</button> */}
+      {/* <button onClick={}>Test</button> @marko TODO delete this line when project completed*/ } 
         <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
