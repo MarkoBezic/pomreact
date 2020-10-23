@@ -34,9 +34,15 @@ class Timer extends Component {
     createdAt: '',
     masterTasks: [],
     masterTaskIds: [],
-    currentMasterTaskId: ""
+    currentMasterTaskId: "",
+    taskRoundsList: [],
+    taskRoundsIds: []
   }
-
+  componentDidMount() {
+    this.intervalID = setInterval(() => this.tick(), 100)
+    this.getAllMasterTasks()
+    this.getAllTaskRoundDetails()
+  }
 
   soundPlay = src => {
     const sound = new Howl({
@@ -61,7 +67,7 @@ class Timer extends Component {
       masterTaskIds: masterTaskIds
     })
   }
-
+  
   getCurrentMasterTaskId = async () => {
     await masterTasksRef.where("name", "==", this.state.taskName)
     .get()
@@ -77,23 +83,34 @@ class Timer extends Component {
   });
   }
 
-  componentDidMount() {
-    this.intervalID = setInterval(() => this.tick(), 100)
-    this.getAllMasterTasks()
-  }
-
   addCompletedTaskRound = () => {
-    taskRoundsRef.add({
+     taskRoundsRef.add({
       parentTaskId: this.state.currentMasterTaskId,
       taskName: this.state.taskName,
       startTime: this.state.startTime,
-      endTime: new Date(),
+      endTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
     })
     masterTasksRef.doc(`${this.state.currentMasterTaskId}`).update({
       completedRoundsCount: increment
     })
   }
 
+  getAllTaskRoundDetails = async () => {
+    const allTaskRoundDetails = await taskRoundsRef.get()
+    let taskRoundsList = []
+    let taskRoundsIds = []
+    allTaskRoundDetails.forEach(taskRound => {
+      const taskRoundVar = taskRound.data()
+      taskRoundsList.push(taskRoundVar)
+      taskRoundVar['id'] = taskRound.id
+      taskRoundsIds.push(taskRoundVar['id']);
+    })
+    this.setState({ 
+      taskRoundsList: taskRoundsList,
+      taskRoundsIds: taskRoundsIds
+    })
+  }
+  
   tick = () => {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
       this.setState(prevState => ({
@@ -138,7 +155,7 @@ class Timer extends Component {
     if (!this.state.isRunning) {
       this.setState({ 
         previousTime: Date.now(),
-        startTime: new Date(),
+        startTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
       })
     }
   }
@@ -180,6 +197,7 @@ class Timer extends Component {
       [name]: value,
     })
   }
+
   handleResumeExistingTimer = (e, name, focusTime, breakTime, id ) => {
     e.preventDefault()
     let existingFocusTime = focusTime * 1000 * 60
@@ -193,6 +211,7 @@ class Timer extends Component {
       currentMasterTaskId: id,
     })
   }
+
   handleDeleteTimer = (e, id) => {
     e.preventDefault()
     confirmAlert({
@@ -227,6 +246,7 @@ class Timer extends Component {
     
       
   }
+  
   handleSubmit = e => {
     e.preventDefault()
     //assuming that masterTasks have unique names
