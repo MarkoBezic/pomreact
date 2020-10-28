@@ -31,7 +31,6 @@ class Dashboard extends Component {
                 </button>
               </td>
               <td>
-                {/* add functionality to resume button to continue a time that has already been created */}
                 <button className="btn btn-primary ml-1 mr-1 mt-1" 
                   onClick={(e) =>  
                   {
@@ -42,7 +41,6 @@ class Dashboard extends Component {
                 </button>
               </td>
               <td>
-                {/* add functionality to delete a record */}
                 <button className="btn btn-primary ml-1 mr-1 mt-1"
                         onClick={(e) => {
                           this.props.handleDeleteTimer(e, task.id)

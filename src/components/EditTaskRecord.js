@@ -7,7 +7,12 @@ class EditTaskRecord extends Component {
 
   state = {
     taskRoundsList: [],
-    taskRoundsIds: []
+    taskRoundsIds: [],
+    isEidtable: false, 
+    selectedTask: '',
+    taskName: '',
+    startTime: '',
+    endTime: '',
   }
   componentDidMount() {
     this.getAllTaskRoundDetails()
@@ -60,6 +65,54 @@ class EditTaskRecord extends Component {
       ]
     });
   }
+  
+  makeEditable = (e, id, name, startTime, endTime) => {
+    e.preventDefault()
+    this.setState({
+      selectedTask: id,
+      isEidtable: true,
+      taskName: name,
+      startTime: startTime,
+      endTime: endTime,
+    })
+  }
+
+  inputRef = React.createRef()
+
+  handleInputChange = e => {
+    const target = e.target
+    const value = target.value
+    const name = target.name
+    this.setState({
+      [name]: value,
+    })
+    
+  }
+
+  saveEdits = (e, id)  => {
+    e.preventDefault()
+    const taskRounds = taskRoundsRef.doc(id)
+    const taskObj = {
+      endTime: this.state.endTime,
+      parentTaskId: id,
+      startTime: this.state.startTime,
+      taskName: this.state.taskName,
+    } 
+    taskRounds.update({
+      taskName: this.state.taskName,
+      startTime: this.state.startTime,
+      endTime: this.state.endTime
+    })
+    this.setState({
+      isEidtable: false,
+      taskRoundsList: [
+        taskObj, ...this.state.taskRoundsList.filter(round => {
+          return round.id !== id
+        })
+      ]
+    })
+  }
+
   render() {
     return (
       <div>
@@ -74,26 +127,61 @@ class EditTaskRecord extends Component {
             </tr>
             {this.state.taskRoundsList.map((task, index) => (
               <tr key={index}>
-                <td>{task.taskName} </td>
-                <td className="text-center">
-                  {task.startTime}
-                </td>
-                <td className="text-center">
-                  {task.endTime}
-                </td>
-                <td>
-                  {/* add functionality to edit a record */}
+                {this.state.isEidtable && this.state.selectedTask === task.id ? 
+                <>
+                  <td>
+                    <input type="string"
+                           name="taskName" 
+                           placeholder={task.taskName}
+                           onChange={this.handleInputChange}
+                           ref={this.inputRef}
+                           ></input>
+                  </td>
+                  <td className="text-center">
+                    <input type="string" 
+                            name="startTime"
+                            placeholder={task.startTime}
+                            onChange={this.handleInputChange}
+                            ref={this.inputRef}
+                            ></input>
+                  </td>
+                  <td className="text-center">
+                    <input type="string" 
+                            name="endTime"
+                            placeholder={task.startTime}
+                            onChange={this.handleInputChange}
+                            ref={this.inputRef}
+                            ></input>
+                  </td>
                   <button className="btn btn-primary ml-1 mr-1 mt-1"
-                          onClick={this.redirectToEdit}
+                          onClick={(e) => {this.saveEdits(e, task.id)}}
+                    >
+                    Save
+                  </button>
+                </>
+                 : 
+                 <>
+                  <td>{task.taskName} </td>
+                  <td className="text-center">
+                    {task.startTime}
+                  </td>
+                  <td className="text-center">
+                    {task.endTime}
+                  </td>
+                  <td>
+                  <button className="btn btn-primary ml-1 mr-1 mt-1"
+                          onClick={(e) => {this.makeEditable(e, task.id, task.taskName, task.startTime, task.endTime)}}
                     >Edit
                   </button>
                 </td>
+                </>
+                }
+                
                 <td>
-                  {/* add functionality to delete a record */}
                   <button className="btn btn-primary ml-1 mr-1 mt-1"
                           onClick={(e) => {
                             this.handleDeleteRound(e, task.id)
-                          }}
+                           }}
                   >
                     Delete
                   </button>
