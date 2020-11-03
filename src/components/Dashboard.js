@@ -2,8 +2,9 @@ import React, { Component } from 'react'
 
 class Dashboard extends Component {
 
-    redirectToEdit = () => {
-      this.props.history.push(`/edit-mastertask-record`)
+    redirectToEdit = (e, taskId) => {
+      e.preventDefault()
+      this.props.history.push(`/edit-mastertask`, taskId)
     }
    
   render() { 
@@ -24,9 +25,8 @@ class Dashboard extends Component {
                 {task.completedRoundsCount}
                 </td>
               <td>
-                {/* add functionality to edit a record */}
                 <button className="btn btn-primary ml-1 mr-1 mt-1"
-                        onClick={this.redirectToEdit}
+                        onClick={(e) => this.redirectToEdit(e, task.id)}
                   >Edit
                 </button>
               </td>

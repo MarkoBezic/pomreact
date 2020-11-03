@@ -5,28 +5,28 @@ import { masterTasksRef } from "../firebase"
 class EditMasterTask extends Component {
 
   state = { 
-    masterTasks: [],
+    currentMasterTask: {},
     isEidtable: false
    }
 
   componentDidMount() {
-    this.getAllMasterTasks()
+    this.getCurrentMasterTask()
   }
 
-  getAllMasterTasks = async () => {
-    const allMasterTasks = await masterTasksRef.get()
-    let masterTasksList = []
-    let masterTaskIds = []
-    allMasterTasks.forEach(parentTask => {
-      const parentTaskVar = parentTask.data()
-      masterTasksList.push(parentTaskVar)
-      parentTaskVar['id'] = parentTask.id
-      masterTaskIds.push(parentTaskVar['id']);
+  getCurrentMasterTask = () => {
+    let id = this.props.history.location.state
+    let masterTaskDocRef = masterTasksRef.doc(id)
+    masterTaskDocRef.get().then((doc)=> {
+      if (doc.exists) {
+        this.setState({
+          currentMasterTask: doc.data()
+        })
+      } else {
+        console.log("No such document")
+      }
+    }).catch((error) => {
+      console.log("Error getting document: ", error)
     })
-    this.setState({ 
-      masterTasks: masterTasksList,
-    })
-    console.log(this.state.masterTasks)
   }
   
   render() { 
@@ -35,25 +35,19 @@ class EditMasterTask extends Component {
          <table>
           <thead>
             <tr>
-              <th>Task</th>
-              <th>Focus Time</th>
-              <th>Break Time</th>
+              <th className="p-3">Task</th>
+              <th className="p-3">Focus Minutes</th>
+              <th className="p-3">Break Minutes</th>
             </tr>
-            {this.state.masterTasks.map((task, index) => (
-              <tr key={index}>
-                <td>{task.name}</td>
-                <td className="text-center">
-                    {task.focusTime}
-                </td>
-                <td className="text-center">
-                    {task.breakTime}
-                </td>
+            <tr>
+              <td className="text-center">{this.state.currentMasterTask.name}</td>
+              <td className="text-center">{this.state.currentMasterTask.focusTime}</td>
+              <td className="text-center">{this.state.currentMasterTask.breakTime}</td>
               </tr>
-            ))}
           </thead>
         </table>
       </div>
-  )
+    )
   }
 }
  

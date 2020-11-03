@@ -15,7 +15,7 @@ function App() {
           </div>}
           /> 
         <Route 
-        exact path='/edit-mastertask-record'
+        path='/edit-mastertask'
         render={props => <EditMasterTask {...props}/>} />
     </BrowserRouter>
   );
