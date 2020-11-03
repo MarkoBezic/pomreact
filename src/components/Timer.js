@@ -40,9 +40,52 @@ class Timer extends Component {
   }
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
+    this.rollUpRoundsTotalToMasterTasks() 
     this.getAllMasterTasks()
     this.getAllTaskRoundDetails()
   }
+  
+  componentDidUpdate() {
+    this.getAllMasterTasks()
+  }
+
+  rollUpRoundsTotalToMasterTasks = async () => {
+    //get all masterTasks
+    const allMasterTasks = await masterTasksRef.get()
+    let parentTaskIdsFromRounds = []
+    
+    // for each masterTask ID, check how many docs exist in taskRoundEntry that match with the parentTaskId
+    allMasterTasks.forEach(async parentTask => {
+      const parentTaskVar = parentTask.data()
+      const allTaskRoundEntries = await taskRoundsRef.get()
+      //count function taken from: https://www.youtube.com/watch?v=P3gJr_Rd80g 
+      const count = (arr, val) => {
+        return arr.reduce((acc, elm) => {
+          return (val === elm ? acc + 1 : acc)
+        }, 0)
+    }
+      // push all parentTaskIds in an array parentTaskIdsFromRounds 
+      allTaskRoundEntries.forEach(taskRound => {
+        const taskRoundVar = taskRound.data()
+        parentTaskIdsFromRounds.push(taskRoundVar.parentTaskId)
+        })
+
+      // count how many times a specific masterTask ID appears the array stored in parentTaskIdsFromRounds
+        
+        let completedRoundsCountVar = count(parentTaskIdsFromRounds, parentTask.id)
+      
+      // set total number of IDs found in the array to masterTasks completedRundsCounts field in firebase
+
+        const masterTask = masterTasksRef.doc(parentTask.id)
+        masterTask.update({
+          completedRoundsCount: completedRoundsCountVar,
+        })
+
+      // clear partTaskIdsFromRounds array
+        parentTaskIdsFromRounds = []
+    })  
+
+ }
 
   soundPlay = src => {
     const sound = new Howl({
@@ -90,9 +133,8 @@ class Timer extends Component {
       startTime: this.state.startTime,
       endTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
     })
-    masterTasksRef.doc(`${this.state.currentMasterTaskId}`).update({
-      completedRoundsCount: increment
-    })
+    this.rollUpRoundsTotalToMasterTasks()
+    
   }
 
   getAllTaskRoundDetails = async () => {
@@ -331,7 +373,7 @@ class Timer extends Component {
 
     return (
       <>
-      {/* <button onClick={}>Test</button> @marko TODO delete this line when project completed*/ } 
+      {/* <button onClick={test function here}>Test</button>  /@marko TODO delete this line when project completed */}
         <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
@@ -425,7 +467,7 @@ class Timer extends Component {
           <div className="row">
             <div className="col d-flex justify-content-center">
               <p className="font-weight-bold text-white pt-4">
-                Rounds Completed: {this.state.counter}
+                Rounds Completed This Session: {this.state.counter}
               </p>
             </div>
           </div>

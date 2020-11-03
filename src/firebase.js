@@ -18,7 +18,5 @@ const db = firebase.firestore();
 
 const masterTasksRef = db.collection("masterTasks");
 const taskRoundsRef = db.collection("taskRoundEntry");
-const increment = firebase.firestore.FieldValue.increment(1);
-const decrement = firebase.firestore.FieldValue.increment(-1);
 
-export { masterTasksRef, taskRoundsRef, increment, decrement }
+export { masterTasksRef, taskRoundsRef }

@@ -2,6 +2,11 @@ import React, { Component } from 'react'
 import { confirmAlert } from 'react-confirm-alert'
 import { taskRoundsRef } from '../firebase'
 
+/// Version 2 of editable component ////
+/// contentEditable function from: https://medium.com/@vraa/inline-edit-using-higher-order-components-in-react-7828687c120c
+
+
+////// Version 1 of eidtable task records: /////
 
 class EditTaskRecord extends Component {
 
@@ -130,7 +135,7 @@ class EditTaskRecord extends Component {
                 {this.state.isEidtable && this.state.selectedTask === task.id ? 
                 <>
                   <td>
-                    <input type="string"
+                    <input type="text"
                            name="taskName" 
                            placeholder={task.taskName}
                            onChange={this.handleInputChange}
@@ -138,7 +143,7 @@ class EditTaskRecord extends Component {
                            ></input>
                   </td>
                   <td className="text-center">
-                    <input type="string" 
+                    <input type="text" 
                             name="startTime"
                             placeholder={task.startTime}
                             onChange={this.handleInputChange}
@@ -146,7 +151,7 @@ class EditTaskRecord extends Component {
                             ></input>
                   </td>
                   <td className="text-center">
-                    <input type="string" 
+                    <input type="text" 
                             name="endTime"
                             placeholder={task.startTime}
                             onChange={this.handleInputChange}
