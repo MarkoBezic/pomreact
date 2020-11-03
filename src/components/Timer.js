@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Howl } from 'howler'
-import { increment, masterTasksRef, taskRoundsRef } from '../firebase'
+import { masterTasksRef, taskRoundsRef } from '../firebase'
 import Dashboard from './Dashboard'
 import { confirmAlert } from 'react-confirm-alert'
 import 'react-confirm-alert/src/react-confirm-alert.css';
@@ -56,7 +56,6 @@ class Timer extends Component {
     
     // for each masterTask ID, check how many docs exist in taskRoundEntry that match with the parentTaskId
     allMasterTasks.forEach(async parentTask => {
-      const parentTaskVar = parentTask.data()
       const allTaskRoundEntries = await taskRoundsRef.get()
       //count function taken from: https://www.youtube.com/watch?v=P3gJr_Rd80g 
       const count = (arr, val) => {
@@ -64,7 +63,7 @@ class Timer extends Component {
           return (val === elm ? acc + 1 : acc)
         }, 0)
     }
-      // push all parentTaskIds in an array parentTaskIdsFromRounds 
+      // push all parentTaskIds in array parentTaskIdsFromRounds 
       allTaskRoundEntries.forEach(taskRound => {
         const taskRoundVar = taskRound.data()
         parentTaskIdsFromRounds.push(taskRoundVar.parentTaskId)

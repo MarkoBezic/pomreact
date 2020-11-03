@@ -2,12 +2,6 @@ import React, { Component } from 'react'
 import { confirmAlert } from 'react-confirm-alert'
 import { taskRoundsRef } from '../firebase'
 
-/// Version 2 of editable component ////
-/// contentEditable function from: https://medium.com/@vraa/inline-edit-using-higher-order-components-in-react-7828687c120c
-
-
-////// Version 1 of eidtable task records: /////
-
 class EditTaskRecord extends Component {
 
   state = {
