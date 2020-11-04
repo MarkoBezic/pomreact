@@ -1,5 +1,5 @@
-
 import React, { Component } from "react"
+import { confirmAlert } from "react-confirm-alert"
 import { masterTasksRef } from "../firebase"
 
 class EditMasterTask extends Component {
@@ -9,6 +9,7 @@ class EditMasterTask extends Component {
     isEidtable: true,
     focusTime: "",
     breakTime: "",
+    emptyInputs: false
    }
 
   inputRef = React.createRef()
@@ -23,12 +24,20 @@ class EditMasterTask extends Component {
     masterTaskDocRef.get().then((doc)=> {
       if (doc.exists) {
         this.setState({
-          currentMasterTask: doc.data()
+          currentMasterTask: doc.data(),
+          
         })
       } else {
         console.log("No such document")
       }
-    }).catch((error) => {
+    })
+    .then(()=>{
+      this.setState({
+        focusTime: this.state.currentMasterTask.focusTime,
+        breakTime: this.state.currentMasterTask.breakTime
+      })
+    })
+    .catch((error) => {
       console.log("Error getting document: ", error)
     })
   }
@@ -43,19 +52,41 @@ class EditMasterTask extends Component {
     
   }
 
+  redirectToTimer = () => {
+    this.props.history.push('/')
+  }
+
   handleSave = () => {
-    let id = this.props.history.location.state
-    const masterTask = masterTasksRef.doc(id)
-    masterTask.update({
-      focusTime: this.state.focusTime,
-      breakTime: this.state.breakTime,
-      updateAt: new Date(),
-    })
-    this.setState({
-      isEidtable: false,
-    })
-    this.getCurrentMasterTask()
-    //@marko todo: create alert confirm changes have been saved
+    if(this.state.focusTime === "" || this.state.breakTime === "") {
+      this.setState({
+        emptyInputs: true
+      })
+    } else if (this.state.focusTime > 0 || this.state.breakTime > 0 ) {
+      let id = this.props.history.location.state
+      const masterTask = masterTasksRef.doc(id)
+      masterTask.update({
+        focusTime: this.state.focusTime,
+        breakTime: this.state.breakTime,
+        updateAt: new Date(),
+      })
+      this.getCurrentMasterTask()
+      this.setState({
+        isEidtable: false,
+        emptyInputs: false,
+      })
+      confirmAlert({
+        title: "Updates saved successfully",
+        message: "Return to timer",
+        buttons: [
+          {
+            label: 'Okay',
+            onClick: () => {
+              this.redirectToTimer()
+            }
+          },
+        ]
+      })
+    }
   }
 
   handleEdit = () => {
@@ -67,6 +98,7 @@ class EditMasterTask extends Component {
   render() { 
     return (
       <div>
+        {this.state.emptyInputs ? (<h4 className="text-danger pl-5 pt-3">Both fields must have a number!</h4>) : ""}
          <table>
           <thead>
             <tr>
@@ -112,7 +144,6 @@ class EditMasterTask extends Component {
                 <button className="btn btn-primary ml-1 mr-1 mt-1"
                   onClick={()=> {this.handleEdit()}}
                 >Edit</button>
-                {/* //@marko todo: add button to return to hompage */}
               </>
               )}
               </tr>
