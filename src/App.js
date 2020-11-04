@@ -3,6 +3,7 @@ import Timer from './components/Timer'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { Route, BrowserRouter }  from 'react-router-dom'
 import EditMasterTask from './components/EditMasterTask';
+import EditTaskRecord from './components/EditTaskRecord';
 
 function App() {
   return (
@@ -17,6 +18,9 @@ function App() {
         <Route 
         path='/edit-mastertask'
         render={props => <EditMasterTask {...props}/>} />
+        <Route 
+        path='/edit-rounds'
+        render={props => <EditTaskRecord {...props}/>} />
     </BrowserRouter>
   );
 }

@@ -1,10 +1,20 @@
 import React, { Component } from 'react'
+import { Link } from 'react-router-dom';
 
 class Dashboard extends Component {
 
     redirectToEdit = (e, taskId) => {
       e.preventDefault()
       this.props.history.push(`/edit-mastertask`, taskId)
+    }
+
+    redirectToEditRounds = (e, taskId, taskName) => {
+      e.preventDefault()
+      let taskRoundObj = {
+        taskId: taskId,
+        taskName: taskName
+      }
+      this.props.history.push(`/edit-rounds`, taskRoundObj)
     }
    
   render() { 
@@ -22,7 +32,10 @@ class Dashboard extends Component {
             <tr key={index}>
               <td>{task.name} </td>
               <td className="text-center">
-                {task.completedRoundsCount}
+                <Link to="/edit-rounds"  
+                      className="text-white"
+                      onClick={(e)=> this.redirectToEditRounds(e, task.id, task.name)}
+                      >{task.completedRoundsCount}</Link>
                 </td>
               <td>
                 <button className="btn btn-primary ml-1 mr-1 mt-1"
