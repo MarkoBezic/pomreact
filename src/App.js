@@ -1,9 +1,9 @@
 import React from 'react';
 import Timer from './components/Timer'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import { Route, BrowserRouter }  from 'react-router-dom'
-import EditMasterTask from './components/EditMasterTask';
-import EditTaskRecord from './components/EditTaskRecord';
+import { Route, BrowserRouter } from 'react-router-dom'
+import EditMasterTask from './components/EditMasterTask'
+import EditTaskRecord from './components/EditTaskRecord'
 
 function App() {
   return (

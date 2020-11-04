@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { confirmAlert } from 'react-confirm-alert'
-import { taskRoundsRef } from '../firebase'
+import { masterTasksRef, taskRoundsRef } from '../firebase'
 
 class EditTaskRecord extends Component {
 
@@ -37,6 +37,12 @@ class EditTaskRecord extends Component {
     })
   }
 
+  handleUpdatedAt = (id) => {
+    masterTasksRef.doc(id).update({
+      updatedAt: new Date()
+    }) 
+ } 
+ //@marko todo: completedRoundsCount should update in the db the moment the record is deleted
   handleDeleteRound = (e, id) => {
     e.preventDefault()
     confirmAlert({
@@ -46,6 +52,8 @@ class EditTaskRecord extends Component {
         {
           label: 'Yes',
           onClick: () => {
+            this.handleUpdatedAt(this.state.currentTaskId)
+            console.log(id)
             const taskRound = taskRoundsRef.doc(id)
             this.setState({
               taskRoundsList: [
@@ -59,6 +67,7 @@ class EditTaskRecord extends Component {
               }).catch(function(error) {
                 console.error("Error removing document: ", error);
               });
+              
           }
         },
         {
@@ -66,7 +75,7 @@ class EditTaskRecord extends Component {
           onClick: () => alert("Maybe next time! :)")
         }
       ]
-    });
+    })
   }
   
   inputRef = React.createRef()
@@ -79,7 +88,7 @@ class EditTaskRecord extends Component {
       [name]: value,
     })
   }
-
+  //@marko todo: completedRoundsCount should update as soon as new record is manually added
   handleSaveRound = () => {
     taskRoundsRef.add({
       parentTaskId: this.state.currentTaskId,
@@ -87,6 +96,7 @@ class EditTaskRecord extends Component {
       startTime: this.state.startTime,
       endTime: this.state.endTime,
     })
+    this.handleUpdatedAt(this.state.currentTaskId)
     this.setState({
       isEidtable: false
     })

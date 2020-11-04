@@ -28,7 +28,6 @@ class Timer extends Component {
     userFocusTime: '',
     userBreakTime: '',
     taskName: '',
-    taskCollectionSize: 0,
     startTime: '',
     createTimerSucces: '',
     createdAt: '',
@@ -125,15 +124,22 @@ class Timer extends Component {
   });
   }
 
+  handleUpdatedAt = (id) => {
+     masterTasksRef.doc(id).update({
+       updatedAt: new Date()
+     }) 
+  } 
+
   addCompletedTaskRound = () => {
+    const id = this.state.currentMasterTaskId
      taskRoundsRef.add({
-      parentTaskId: this.state.currentMasterTaskId,
+      parentTaskId: id,
       taskName: this.state.taskName,
       startTime: this.state.startTime,
       endTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
     })
     this.rollUpRoundsTotalToMasterTasks()
-    
+    this.handleUpdatedAt(id)
   }
 
   getAllTaskRoundDetails = async () => {
@@ -152,6 +158,7 @@ class Timer extends Component {
     })
   }
   
+  //@marko todo: create in logic for ticking, current logic does not tick properly
   tick = () => {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
       this.setState(prevState => ({

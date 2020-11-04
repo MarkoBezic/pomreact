@@ -67,7 +67,7 @@ class EditMasterTask extends Component {
       masterTask.update({
         focusTime: this.state.focusTime,
         breakTime: this.state.breakTime,
-        updateAt: new Date(),
+        updatedAt: new Date(),
       })
       this.getCurrentMasterTask()
       this.setState({
