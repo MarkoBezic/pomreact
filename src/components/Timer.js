@@ -3,8 +3,7 @@ import { Howl } from 'howler'
 import { masterTasksRef, taskRoundsRef } from '../firebase'
 import Dashboard from './Dashboard'
 import { confirmAlert } from 'react-confirm-alert'
-import 'react-confirm-alert/src/react-confirm-alert.css';
-
+import 'react-confirm-alert/src/react-confirm-alert.css'
 
 const audioClips = [
   {
@@ -19,6 +18,7 @@ const audioClips = [
 
 class Timer extends Component {
   state = {
+    initialState: true,
     isRunning: false,
     onBreak: false,
     previousTime: 0,
@@ -33,17 +33,17 @@ class Timer extends Component {
     createdAt: '',
     masterTasks: [],
     masterTaskIds: [],
-    currentMasterTaskId: "",
+    currentMasterTaskId: '',
     taskRoundsList: [],
-    taskRoundsIds: []
+    taskRoundsIds: [],
   }
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
-    this.rollUpRoundsTotalToMasterTasks() 
+    this.rollUpRoundsTotalToMasterTasks()
     this.getAllMasterTasks()
     this.getAllTaskRoundDetails()
   }
-  
+
   componentDidUpdate() {
     this.getAllMasterTasks()
   }
@@ -52,38 +52,40 @@ class Timer extends Component {
     //get all masterTasks
     const allMasterTasks = await masterTasksRef.get()
     let parentTaskIdsFromRounds = []
-    
+
     // for each masterTask ID, check how many docs exist in taskRoundEntry that match with the parentTaskId
     allMasterTasks.forEach(async parentTask => {
       const allTaskRoundEntries = await taskRoundsRef.get()
-      //count function taken from: https://www.youtube.com/watch?v=P3gJr_Rd80g 
+      //count function taken from: https://www.youtube.com/watch?v=P3gJr_Rd80g
       const count = (arr, val) => {
         return arr.reduce((acc, elm) => {
-          return (val === elm ? acc + 1 : acc)
+          return val === elm ? acc + 1 : acc
         }, 0)
-    }
-      // push all parentTaskIds in array parentTaskIdsFromRounds 
+      }
+      // push all parentTaskIds in array parentTaskIdsFromRounds
       allTaskRoundEntries.forEach(taskRound => {
         const taskRoundVar = taskRound.data()
         parentTaskIdsFromRounds.push(taskRoundVar.parentTaskId)
-        })
+      })
 
       // count how many times a specific masterTask ID appears the array stored in parentTaskIdsFromRounds
-        
-        let completedRoundsCountVar = count(parentTaskIdsFromRounds, parentTask.id)
-      
+
+      let completedRoundsCountVar = count(
+        parentTaskIdsFromRounds,
+        parentTask.id
+      )
+
       // set total number of IDs found in the array to masterTasks completedRundsCounts field in firebase
 
-        const masterTask = masterTasksRef.doc(parentTask.id)
-        masterTask.update({
-          completedRoundsCount: completedRoundsCountVar,
-        })
+      const masterTask = masterTasksRef.doc(parentTask.id)
+      masterTask.update({
+        completedRoundsCount: completedRoundsCountVar,
+      })
 
       // clear partTaskIdsFromRounds array
-        parentTaskIdsFromRounds = []
-    })  
-
- }
+      parentTaskIdsFromRounds = []
+    })
+  }
 
   soundPlay = src => {
     const sound = new Howl({
@@ -101,42 +103,45 @@ class Timer extends Component {
       const parentTaskVar = parentTask.data()
       masterTasksList.push(parentTaskVar)
       parentTaskVar['id'] = parentTask.id
-      masterTaskIds.push(parentTaskVar['id']);
+      masterTaskIds.push(parentTaskVar['id'])
     })
-    this.setState({ 
+    this.setState({
       masterTasks: masterTasksList,
-      masterTaskIds: masterTaskIds
+      masterTaskIds: masterTaskIds,
     })
-  }
-  
-  getCurrentMasterTaskId = async () => {
-    await masterTasksRef.where("name", "==", this.state.taskName)
-    .get()
-    .then((querySnapshot) => {
-      querySnapshot.forEach((doc) => {
-          this.setState({
-            currentMasterTaskId: doc.id
-          })
-      });
-  })
-  .catch((error) => {
-      console.log("Error getting documents: ", error);
-  });
   }
 
-  handleUpdatedAt = (id) => {
-     masterTasksRef.doc(id).update({
-       updatedAt: new Date()
-     }) 
-  } 
+  getCurrentMasterTaskId = async () => {
+    await masterTasksRef
+      .where('name', '==', this.state.taskName)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          this.setState({
+            currentMasterTaskId: doc.id,
+          })
+        })
+      })
+      .catch(error => {
+        console.log('Error getting documents: ', error)
+      })
+  }
+
+  handleUpdatedAt = id => {
+    masterTasksRef.doc(id).update({
+      updatedAt: new Date(),
+    })
+  }
 
   addCompletedTaskRound = () => {
     const id = this.state.currentMasterTaskId
-     taskRoundsRef.add({
+    taskRoundsRef.add({
       parentTaskId: id,
       taskName: this.state.taskName,
       startTime: this.state.startTime,
-      endTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
+      endTime: new Date().toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+      }),
     })
     this.rollUpRoundsTotalToMasterTasks()
     this.handleUpdatedAt(id)
@@ -150,23 +155,21 @@ class Timer extends Component {
       const taskRoundVar = taskRound.data()
       taskRoundsList.push(taskRoundVar)
       taskRoundVar['id'] = taskRound.id
-      taskRoundsIds.push(taskRoundVar['id']);
+      taskRoundsIds.push(taskRoundVar['id'])
     })
-    this.setState({ 
+    this.setState({
       taskRoundsList: taskRoundsList,
-      taskRoundsIds: taskRoundsIds
+      taskRoundsIds: taskRoundsIds,
     })
   }
-  
+
   //@marko todo: create in logic for ticking, current logic does not tick properly
   tick = () => {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
       this.setState(prevState => ({
         onBreak: true,
         focusTime:
-          this.state.userFocusTime <= 0
-            ? 1500000
-            : this.state.userFocusTime,
+          this.state.userFocusTime <= 0 ? 1500000 : this.state.userFocusTime,
         counter: prevState.counter + 1,
       }))
       this.soundPlay(audioClips[0].sound)
@@ -175,9 +178,7 @@ class Timer extends Component {
       this.setState({
         onBreak: false,
         breakTime:
-          this.state.userBreakTime <= 0
-            ? 300000
-            : this.state.userBreakTime,
+          this.state.userBreakTime <= 0 ? 300000 : this.state.userBreakTime,
       })
       this.soundPlay(audioClips[1].sound)
     } else if (this.state.isRunning && !this.state.onBreak) {
@@ -196,14 +197,15 @@ class Timer extends Component {
   }
 
   handleTimer = async () => {
-    
     this.setState(prevState => ({
       isRunning: !prevState.isRunning,
     }))
     if (!this.state.isRunning) {
-      this.setState({ 
+      this.setState({
         previousTime: Date.now(),
-        startTime: new Date().toLocaleString("en-US", {timeZone: "America/New_York"}),
+        startTime: new Date().toLocaleString('en-US', {
+          timeZone: 'America/New_York',
+        }),
       })
     }
   }
@@ -211,13 +213,9 @@ class Timer extends Component {
   handleReset = () => {
     this.setState({
       focusTime:
-        this.state.userFocusTime === ''
-          ? 1500000
-          : this.state.userFocusTime,
+        this.state.userFocusTime === '' ? 1500000 : this.state.userFocusTime,
       breakTime:
-        this.state.userBreakTime === ''
-          ? 300000
-          : this.state.userBreakTime,
+        this.state.userBreakTime === '' ? 300000 : this.state.userBreakTime,
     })
     if (this.state.onBreak) {
       this.setState({
@@ -246,7 +244,7 @@ class Timer extends Component {
     })
   }
 
-  handleResumeExistingTimer = (e, name, focusTime, breakTime, id ) => {
+  handleResumeExistingTimer = (e, name, focusTime, breakTime, id) => {
     e.preventDefault()
     let existingFocusTime = focusTime * 1000 * 60
     let existingBreakTime = breakTime * 1000 * 60
@@ -255,8 +253,9 @@ class Timer extends Component {
       focusTime: existingFocusTime,
       breakTime: existingBreakTime,
       userFocusTime: existingFocusTime,
-      userBreakTime:  existingBreakTime,
+      userBreakTime: existingBreakTime,
       currentMasterTaskId: id,
+      initialState: false,
     })
   }
 
@@ -269,67 +268,68 @@ class Timer extends Component {
         {
           label: 'Yes',
           onClick: () => {
-            const task =  masterTasksRef.doc(id)
+            const task = masterTasksRef.doc(id)
             this.setState({
               masterTasks: [
                 ...this.state.masterTasks.filter(task => {
                   return task.id !== id
-                })
-              ]
+                }),
+              ],
             })
-            task.delete().then(function() {
-                console.log("Document successfully deleted!");
-              }).catch(function(error) {
-                console.error("Error removing document: ", error);
-              });
-          }
+            task
+              .delete()
+              .then(function () {
+                console.log('Document successfully deleted!')
+              })
+              .catch(function (error) {
+                console.error('Error removing document: ', error)
+              })
+          },
         },
         {
           label: 'No',
-          onClick: () => alert("Maybe next time! :)")
-        }
-      ]
-    });
-    
-    
-      
+          onClick: () => alert('Maybe next time! :)'),
+        },
+      ],
+    })
   }
-  
+
   handleSubmit = e => {
     e.preventDefault()
     //assuming that masterTasks have unique names
     const self = this
 
     let getCurrentMasterTaskId = async () => {
-      await masterTasksRef.where("name", "==", self.state.taskName)
-      .get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((doc) => {
+      await masterTasksRef
+        .where('name', '==', self.state.taskName)
+        .get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
             self.setState({
-              currentMasterTaskId: doc.id
+              currentMasterTaskId: doc.id,
             })
-        });
-    })
-    .catch((error) => {
-        console.log("Error getting documents: ", error);
-    });
+          })
+        })
+        .catch(error => {
+          console.log('Error getting documents: ', error)
+        })
     }
-    
+
     let newTimerSetState = () => {
       self.setState({
-            focusTime: self.state.userFocusTime * 60000,
-            breakTime: self.state.userBreakTime * 60000,
-            userFocusTime: self.state.userFocusTime * 60000,
-            userBreakTime: self.state.userBreakTime * 60000,
-            taskName: self.state.taskName,
-            onBreak: false,
-            counter: 0,
-            createdAt: new Date(), 
-            createTimerSucces: true,
-          })
-          self.taskNameInput.current.value = ''
-          self.focusInput.current.value = ''
-          self.breakInput.current.value = ''
+        focusTime: self.state.userFocusTime * 60000,
+        breakTime: self.state.userBreakTime * 60000,
+        userFocusTime: self.state.userFocusTime * 60000,
+        userBreakTime: self.state.userBreakTime * 60000,
+        taskName: self.state.taskName,
+        onBreak: false,
+        counter: 0,
+        createdAt: new Date(),
+        createTimerSucces: true,
+      })
+      self.taskNameInput.current.value = ''
+      self.focusInput.current.value = ''
+      self.breakInput.current.value = ''
     }
     masterTasksRef
       .where('name', '==', self.state.taskName)
@@ -342,7 +342,7 @@ class Timer extends Component {
         })
         if (masterTasks.length === 0) {
           const newTask = {
-            name: self.state.taskName, 
+            name: self.state.taskName,
             completedRoundsCount: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -350,10 +350,11 @@ class Timer extends Component {
             breakTime: self.state.userBreakTime,
           }
           masterTasksRef.doc().set(newTask)
-          newTimerSetState()  
-          getCurrentMasterTaskId() 
+          newTimerSetState()
+          getCurrentMasterTaskId()
           self.setState({
-            masterTasks: [...self.state.masterTasks, newTask]
+            masterTasks: [...self.state.masterTasks, newTask],
+            initialState: false,
           })
         } else {
           self.setState({
@@ -379,7 +380,6 @@ class Timer extends Component {
 
     return (
       <>
-      {/* <button onClick={test function here}>Test</button>  /@marko TODO delete this line when project completed */}
         <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
           <div className="row">
             <div className="col d-flex justify-content-center pt-3">
@@ -431,13 +431,17 @@ class Timer extends Component {
           )}
           <div className="row">
             <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
-              <span>{this.state.taskName ? this.state.taskName : 'Task'}</span>
+              <span>
+                {this.state.taskName
+                  ? this.state.taskName
+                  : 'Enter timer details'}
+              </span>
             </div>
           </div>
           <div className="row">
             <div className="col d-flex justify-content-center p-3">
               <span className="display-2 font-weight-bold text-white">
-                {minutes} : {seconds}
+                {this.state.initialState ? '00:00' : `${minutes} : ${seconds}`}
               </span>
             </div>
           </div>
@@ -473,7 +477,7 @@ class Timer extends Component {
           <div className="row">
             <div className="col d-flex justify-content-center">
               <p className="font-weight-bold text-white pt-4">
-                Rounds Completed This Session: {this.state.counter}
+                Rounds completed this session: {this.state.counter}
               </p>
             </div>
           </div>
@@ -482,12 +486,12 @@ class Timer extends Component {
               div
               className="col d-flex justify-content-center pt-4 text-white"
             >
-              <Dashboard 
+              <Dashboard
                 {...this.props}
-                masterTasks={this.state.masterTasks} 
-                handleResumeExistingTimer={this.handleResumeExistingTimer} 
-                handleDeleteTimer={this.handleDeleteTimer} 
-                />
+                masterTasks={this.state.masterTasks}
+                handleResumeExistingTimer={this.handleResumeExistingTimer}
+                handleDeleteTimer={this.handleDeleteTimer}
+              />
             </div>
           </div>
         </div>
@@ -497,4 +501,3 @@ class Timer extends Component {
 }
 
 export default Timer
-

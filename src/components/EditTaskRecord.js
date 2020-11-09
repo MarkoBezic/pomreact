@@ -3,21 +3,20 @@ import { confirmAlert } from 'react-confirm-alert'
 import { masterTasksRef, taskRoundsRef } from '../firebase'
 
 class EditTaskRecord extends Component {
-
   state = {
     taskRoundsList: [],
     taskRoundsIds: [],
-    isEidtable: false, 
+    isEidtable: false,
     taskName: '',
     startTime: '',
     endTime: '',
-    currentTaskId: ''
+    currentTaskId: '',
   }
   componentDidMount() {
     this.getAllTaskRoundDetails()
     this.setState({
       currentTaskId: this.props.history.location.state.taskId,
-      taskName: this.props.history.location.state.taskName
+      taskName: this.props.history.location.state.taskName,
     })
   }
 
@@ -29,20 +28,20 @@ class EditTaskRecord extends Component {
       const taskRoundVar = taskRound.data()
       taskRoundsList.push(taskRoundVar)
       taskRoundVar['id'] = taskRound.id
-      taskRoundsIds.push(taskRoundVar['id']);
+      taskRoundsIds.push(taskRoundVar['id'])
     })
-    this.setState({ 
+    this.setState({
       taskRoundsList: taskRoundsList,
-      taskRoundsIds: taskRoundsIds
+      taskRoundsIds: taskRoundsIds,
     })
   }
 
-  handleUpdatedAt = (id) => {
+  handleUpdatedAt = id => {
     masterTasksRef.doc(id).update({
-      updatedAt: new Date()
-    }) 
- } 
- //@marko todo: completedRoundsCount should update in the db the moment the record is deleted
+      updatedAt: new Date(),
+    })
+  }
+  //@marko todo: completedRoundsCount should update in the db the moment the record is deleted
   handleDeleteRound = (e, id) => {
     e.preventDefault()
     confirmAlert({
@@ -59,25 +58,27 @@ class EditTaskRecord extends Component {
               taskRoundsList: [
                 ...this.state.taskRoundsList.filter(round => {
                   return round.id !== id
-                })
-              ]
+                }),
+              ],
             })
-            taskRound.delete().then(function() {
-                console.log("Document successfully deleted!");
-              }).catch(function(error) {
-                console.error("Error removing document: ", error);
-              });
-              
-          }
+            taskRound
+              .delete()
+              .then(function () {
+                console.log('Document successfully deleted!')
+              })
+              .catch(function (error) {
+                console.error('Error removing document: ', error)
+              })
+          },
         },
         {
           label: 'No',
-          onClick: () => alert("Maybe next time! :)")
-        }
-      ]
+          onClick: () => alert('Maybe next time! :)'),
+        },
+      ],
     })
   }
-  
+
   inputRef = React.createRef()
 
   handleInputChange = e => {
@@ -98,21 +99,21 @@ class EditTaskRecord extends Component {
     })
     this.handleUpdatedAt(this.state.currentTaskId)
     this.setState({
-      isEidtable: false
+      isEidtable: false,
     })
     this.getAllTaskRoundDetails()
   }
 
   handleAddRound = () => {
     this.setState({
-      isEidtable: true
+      isEidtable: true,
     })
   }
 
   render() {
     return (
       <div>
-         <table>
+        <table>
           <thead>
             <tr>
               <th>Task</th>
@@ -122,62 +123,77 @@ class EditTaskRecord extends Component {
             </tr>
             {this.state.taskRoundsList.map((task, index) => (
               <tr key={index}>
-                 {this.state.currentTaskId === task.parentTaskId ? ( 
-                   <>
+                {this.state.currentTaskId === task.parentTaskId ? (
+                  <>
                     <td>{task.taskName} </td>
-                    <td className="text-center">
-                      {task.startTime}
-                    </td>
-                    <td className="text-center">
-                      {task.endTime}
-                    </td>
+                    <td className="text-center">{task.startTime}</td>
+                    <td className="text-center">{task.endTime}</td>
                     <td>
-                      <button className="btn btn-primary ml-1 mr-1 mt-1"
-                              onClick={(e) => {
-                                this.handleDeleteRound(e, task.id)
-                              }}
-                      >Delete
+                      <button
+                        className="btn btn-primary ml-1 mr-1 mt-1"
+                        onClick={e => {
+                          this.handleDeleteRound(e, task.id)
+                        }}
+                      >
+                        Delete
                       </button>
                     </td>
-                  </>  
-                 ) : "" }
+                  </>
+                ) : (
+                  ''
+                )}
               </tr>
             ))}
             {this.state.isEidtable ? (
               <tr>
                 <td>{this.state.taskName}</td>
-                <td><input
-                      className="m-1"
-                      type="text"
-                      name="startTime"
-                      placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
-                      onChange={this.handleInputChange}
-                      ref={this.inputRef}
-                /></td>
-                <td><input
-                      className="m-1"
-                      type="text"
-                      name="endTime"
-                      placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
-                      onChange={this.handleInputChange}
-                      ref={this.inputRef}
-                /></td>
-                <td><button className="btn btn-primary ml-1 mr-1 mt-1"
-                            onClick={() => {this.handleSaveRound()}}
-                >Save</button></td>
+                <td>
+                  <input
+                    className="m-1"
+                    type="text"
+                    name="startTime"
+                    placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
+                    onChange={this.handleInputChange}
+                    ref={this.inputRef}
+                  />
+                </td>
+                <td>
+                  <input
+                    className="m-1"
+                    type="text"
+                    name="endTime"
+                    placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
+                    onChange={this.handleInputChange}
+                    ref={this.inputRef}
+                  />
+                </td>
+                <td>
+                  <button
+                    className="btn btn-primary ml-1 mr-1 mt-1"
+                    onClick={() => {
+                      this.handleSaveRound()
+                    }}
+                  >
+                    Save
+                  </button>
+                </td>
               </tr>
-            ) : ""}
+            ) : (
+              ''
+            )}
           </thead>
         </table>
-        <button className="btn btn-primary ml-1 mr-1 mt-1"
-                onClick={() => {
-                this.handleAddRound()
-              }}
-        >Add Round
-      </button>
-    </div>
-  )
-}
+        <button
+          className="btn btn-primary ml-1 mr-1 mt-1"
+          onClick={() => {
+            this.handleAddRound()
+          }}
+        >
+          Add Round
+        </button>
+      </div>
+    )
+  }
 }
 
 export default EditTaskRecord
