@@ -8,12 +8,12 @@ class AuthProvider extends Component {
     user: {},
   }
 
-  componentWillMount() {
+  componentDidMount() {
     firebaseAuth.onAuthStateChanged(user => {
       if (user) {
         this.setState({
           user: {
-            id: user.id,
+            id: user.uid,
             email: user.email,
           },
         })
