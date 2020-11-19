@@ -7,7 +7,7 @@ import EditTaskRecord from './components/EditTaskRecord'
 import PageNotFound from './components/PageNotFound'
 import NavBar from './components/NavBar'
 import UserForm from './components/UserForm'
-import { AuthProvider } from './components/AuthContext'
+import AuthProvider from './components/AuthContext'
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
           <Route exact path="/" component={UserForm} />
           <Route
             exact
-            path="/timer"
+            path="/:userId/timer"
             render={props => (
               <div className="app bg-success pb-5">
                 <Timer {...props} />

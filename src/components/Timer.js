@@ -42,12 +42,12 @@ class Timer extends Component {
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
     this.rollUpRoundsTotalToMasterTasks()
-    this.getAllMasterTasks()
+    this.getAllMasterTasks(this.props.match.params.userId)
     this.getAllTaskRoundDetails()
   }
 
   componentDidUpdate() {
-    this.getAllMasterTasks()
+    this.getAllMasterTasks(this.props.match.params.userId)
   }
 
   rollUpRoundsTotalToMasterTasks = async () => {
@@ -97,20 +97,27 @@ class Timer extends Component {
     sound.play()
   }
 
-  getAllMasterTasks = async () => {
-    const allMasterTasks = await masterTasksRef.get()
-    let masterTasksList = []
-    let masterTaskIds = []
-    allMasterTasks.forEach(parentTask => {
-      const parentTaskVar = parentTask.data()
-      masterTasksList.push(parentTaskVar)
-      parentTaskVar['id'] = parentTask.id
-      masterTaskIds.push(parentTaskVar['id'])
-    })
-    this.setState({
-      masterTasks: masterTasksList,
-      masterTaskIds: masterTaskIds,
-    })
+  getAllMasterTasks = async userId => {
+    try {
+      const allMasterTasks = await masterTasksRef
+        .where('user', '==', userId)
+        .orderBy('createdAt')
+        .get()
+      let masterTasksList = []
+      let masterTaskIds = []
+      allMasterTasks.forEach(parentTask => {
+        const parentTaskVar = parentTask.data()
+        masterTasksList.push(parentTaskVar)
+        parentTaskVar['id'] = parentTask.id
+        masterTaskIds.push(parentTaskVar['id'])
+      })
+      this.setState({
+        masterTasks: masterTasksList,
+        masterTaskIds: masterTaskIds,
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   getCurrentMasterTaskId = async () => {
@@ -342,7 +349,7 @@ class Timer extends Component {
           console.log(doc.id, ' => ', doc.data())
           masterTasks.push(doc.data())
         })
-        if (masterTasks.length === 0) {
+        if (masterTasks[0].user != self.state.user) {
           const newTask = {
             name: self.state.taskName,
             completedRoundsCount: 0,
@@ -385,132 +392,134 @@ class Timer extends Component {
       <AuthConsumer>
         {({ user }) => (
           <>
-            {user === undefined ? (
-              <div
-                className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}
-              >
-                <div className="row">
-                  <div className="col d-flex justify-content-center pt-3">
-                    <form
-                      className=""
-                      onSubmit={e => this.handleSubmit(e, user.id)}
-                    >
-                      <input
-                        type="string"
-                        name="taskName"
-                        placeholder="Enter Task Name"
-                        onChange={this.handleInputChange}
-                        ref={this.taskNameInput}
-                      />
-                      <input
-                        type="number"
-                        name="userFocusTime"
-                        placeholder="Enter focus minutes"
-                        onChange={this.handleInputChange}
-                        ref={this.focusInput}
-                      />
-                      <input
-                        type="number"
-                        name="userBreakTime"
-                        placeholder="Enter break minutes"
-                        onChange={this.handleInputChange}
-                        ref={this.breakInput}
-                      />
-                      <input type="submit" />
-                    </form>
-                  </div>
+            <div
+              className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}
+            >
+              <div className="row">
+                <div className="col d-flex justify-content-center pt-3">
+                  <form
+                    className=""
+                    onSubmit={e => this.handleSubmit(e, user.id)}
+                  >
+                    <input
+                      type="string"
+                      name="taskName"
+                      placeholder="Enter Task Name"
+                      onChange={this.handleInputChange}
+                      ref={this.taskNameInput}
+                    />
+                    <input
+                      type="number"
+                      name="userFocusTime"
+                      placeholder="Enter focus minutes"
+                      onChange={this.handleInputChange}
+                      ref={this.focusInput}
+                    />
+                    <input
+                      type="number"
+                      name="userBreakTime"
+                      placeholder="Enter break minutes"
+                      onChange={this.handleInputChange}
+                      ref={this.breakInput}
+                    />
+                    <input type="submit" />
+                  </form>
                 </div>
-                {this.state.createTimerSucces === '' ? (
-                  ''
-                ) : this.state.createTimerSucces ? (
-                  <div className="row">
-                    <div className="col d-flex justify-content-center">
-                      <span className="pt-4 text-white font-weight-bold">
-                        New timer created
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="row">
-                    <div className="col d-flex justify-content-center">
-                      <span className="pt-4 text-white font-weight-bold">
-                        Timer already exists for this task. Please resume
-                        existing timer
-                      </span>
-                    </div>
-                  </div>
-                )}
-                <div className="row">
-                  <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
-                    <span>
-                      {this.state.taskName
-                        ? this.state.taskName
-                        : 'Enter timer details'}
-                    </span>
-                  </div>
-                </div>
-                <div className="row">
-                  <div className="col d-flex justify-content-center p-3">
-                    <span className="display-2 font-weight-bold text-white">
-                      {this.state.initialState
-                        ? '00:00'
-                        : `${minutes} : ${seconds}`}
-                    </span>
-                  </div>
-                </div>
+              </div>
+              {this.state.createTimerSucces === '' ? (
+                ''
+              ) : this.state.createTimerSucces ? (
                 <div className="row">
                   <div className="col d-flex justify-content-center">
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
-                      onClick={this.handleTimer}
-                    >
-                      {this.state.isRunning ? 'Stop' : 'Start'}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
-                      onClick={this.handleReset}
-                    >
-                      Reset
-                    </button>
-                    {this.state.onBreak ? (
+                    <span className="pt-4 text-white font-weight-bold">
+                      New timer created
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="row">
+                  <div className="col d-flex justify-content-center">
+                    <span className="pt-4 text-white font-weight-bold">
+                      Timer already exists for this task. Please resume existing
+                      timer
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="row">
+                <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
+                  <span>
+                    {this.state.taskName
+                      ? this.state.taskName
+                      : 'Enter timer details'}
+                  </span>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col d-flex justify-content-center p-3">
+                  <span className="display-2 font-weight-bold text-white">
+                    {this.state.initialState
+                      ? '00:00'
+                      : `${minutes} : ${seconds}`}
+                  </span>
+                </div>
+              </div>
+              <div className="row">
+                <div className="col d-flex justify-content-center">
+                  {this.state.taskName ? (
+                    <>
                       <button
                         type="button"
                         className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
-                        onClick={this.handleSkip}
+                        onClick={this.handleTimer}
                       >
-                        Skip
+                        {this.state.isRunning ? 'Stop' : 'Start'}
                       </button>
-                    ) : (
-                      ''
-                    )}
-                  </div>
-                </div>
-                <div className="row">
-                  <div className="col d-flex justify-content-center">
-                    <p className="font-weight-bold text-white pt-4">
-                      Rounds completed this session: {this.state.counter}
-                    </p>
-                  </div>
-                </div>
-                <div className="row">
-                  <div
-                    div
-                    className="col d-flex justify-content-center pt-4 text-white"
-                  >
-                    <Dashboard
-                      {...this.props}
-                      masterTasks={this.state.masterTasks}
-                      handleResumeExistingTimer={this.handleResumeExistingTimer}
-                      handleDeleteTimer={this.handleDeleteTimer}
-                    />
-                  </div>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
+                        onClick={this.handleReset}
+                      >
+                        Reset
+                      </button>
+                      {this.state.onBreak ? (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
+                          onClick={this.handleSkip}
+                        >
+                          Skip
+                        </button>
+                      ) : (
+                        ''
+                      )}
+                    </>
+                  ) : (
+                    ' '
+                  )}
                 </div>
               </div>
-            ) : (
-              <span></span>
-            )}
+              <div className="row">
+                <div className="col d-flex justify-content-center">
+                  <p className="font-weight-bold text-white pt-4">
+                    Rounds completed this session: {this.state.counter}
+                  </p>
+                </div>
+              </div>
+              <div className="row">
+                <div
+                  div
+                  className="col d-flex justify-content-center pt-4 text-white"
+                >
+                  <Dashboard
+                    {...this.props}
+                    masterTasks={this.state.masterTasks}
+                    handleResumeExistingTimer={this.handleResumeExistingTimer}
+                    handleDeleteTimer={this.handleDeleteTimer}
+                  />
+                </div>
+              </div>
+            </div>
           </>
         )}
       </AuthConsumer>
