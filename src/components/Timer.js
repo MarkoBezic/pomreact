@@ -304,6 +304,9 @@ class Timer extends Component {
 
   handleSubmit = (e, userId) => {
     e.preventDefault()
+    this.setState({
+      user: userId,
+    })
     //assuming that masterTasks have unique names
     const self = this
 
@@ -347,9 +350,13 @@ class Timer extends Component {
         let masterTasks = []
         querySnapshot.forEach(function (doc) {
           console.log(doc.id, ' => ', doc.data())
-          masterTasks.push(doc.data())
+          if (doc.data().user === self.state.user) {
+            masterTasks.push(doc.data())
+          }
+          console.log(masterTasks)
         })
-        if (masterTasks[0].user != self.state.user) {
+
+        if (masterTasks.length === 0) {
           const newTask = {
             name: self.state.taskName,
             completedRoundsCount: 0,
