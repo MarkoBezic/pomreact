@@ -307,7 +307,6 @@ class Timer extends Component {
     this.setState({
       user: userId,
     })
-    //assuming that masterTasks have unique names
     const self = this
 
     let getCurrentMasterTaskId = async () => {
