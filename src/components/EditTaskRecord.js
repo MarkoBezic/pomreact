@@ -11,6 +11,7 @@ class EditTaskRecord extends Component {
     startTime: '',
     endTime: '',
     currentTaskId: '',
+    warning: false,
   }
   componentDidMount() {
     this.getAllTaskRoundDetails()
@@ -41,7 +42,6 @@ class EditTaskRecord extends Component {
       updatedAt: new Date(),
     })
   }
-  //@marko todo: completedRoundsCount should update in the db the moment the record is deleted
   handleDeleteRound = (e, id) => {
     e.preventDefault()
     confirmAlert({
@@ -52,7 +52,6 @@ class EditTaskRecord extends Component {
           label: 'Yes',
           onClick: () => {
             this.handleUpdatedAt(this.state.currentTaskId)
-            console.log(id)
             const taskRound = taskRoundsRef.doc(id)
             this.setState({
               taskRoundsList: [
@@ -79,7 +78,8 @@ class EditTaskRecord extends Component {
     })
   }
 
-  inputRef = React.createRef()
+  // startInputRef = React.createRef()
+  // endInputRef = React.createRef()
 
   handleInputChange = e => {
     const target = e.target
@@ -87,32 +87,42 @@ class EditTaskRecord extends Component {
     const name = target.name
     this.setState({
       [name]: value,
+      warning: false,
     })
   }
-  //@marko todo: completedRoundsCount should update as soon as new record is manually added
   handleSaveRound = () => {
-    taskRoundsRef.add({
-      parentTaskId: this.state.currentTaskId,
-      taskName: this.state.taskName,
-      startTime: this.state.startTime,
-      endTime: this.state.endTime,
-    })
-    this.handleUpdatedAt(this.state.currentTaskId)
-    this.setState({
-      isEidtable: false,
-    })
-    this.getAllTaskRoundDetails()
+    if (this.state.startTime !== '' && this.state.endTime !== '') {
+      taskRoundsRef.add({
+        parentTaskId: this.state.currentTaskId,
+        taskName: this.state.taskName,
+        startTime: this.state.startTime,
+        endTime: this.state.endTime,
+      })
+      this.handleUpdatedAt(this.state.currentTaskId)
+      this.setState({
+        isEidtable: false,
+        warning: false,
+      })
+      this.getAllTaskRoundDetails()
+    } else {
+      this.setState({
+        warning: true,
+      })
+    }
   }
 
   handleAddRound = () => {
     this.setState({
       isEidtable: true,
+      startTime: '',
+      endTime: '',
     })
   }
 
   render() {
     return (
       <div>
+        {this.state.warning ? <p>Cannont have empty field</p> : ''}
         <table>
           <thead>
             <tr>
@@ -150,21 +160,21 @@ class EditTaskRecord extends Component {
                 <td>
                   <input
                     className="m-1"
-                    type="text"
+                    type="datetime-local"
                     name="startTime"
                     placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
                     onChange={this.handleInputChange}
-                    ref={this.inputRef}
+                    // ref={this.startInputRef}
                   />
                 </td>
                 <td>
                   <input
                     className="m-1"
-                    type="text"
+                    type="datetime-local"
                     name="endTime"
                     placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
                     onChange={this.handleInputChange}
-                    ref={this.inputRef}
+                    // ref={this.endInputRef}
                   />
                 </td>
                 <td>
