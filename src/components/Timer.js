@@ -239,10 +239,6 @@ class Timer extends Component {
     this.handleReset()
   }
 
-  taskNameInput = React.createRef()
-  focusInput = React.createRef()
-  breakInput = React.createRef()
-
   handleInputChange = e => {
     const target = e.target
     const value = target.value
@@ -412,21 +408,18 @@ class Timer extends Component {
                       name="taskName"
                       placeholder="Enter Task Name"
                       onChange={this.handleInputChange}
-                      ref={this.taskNameInput}
                     />
                     <input
                       type="number"
                       name="userFocusTime"
                       placeholder="Enter focus minutes"
                       onChange={this.handleInputChange}
-                      ref={this.focusInput}
                     />
                     <input
                       type="number"
                       name="userBreakTime"
                       placeholder="Enter break minutes"
                       onChange={this.handleInputChange}
-                      ref={this.breakInput}
                     />
                     <input type="submit" />
                   </form>

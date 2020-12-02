@@ -11,8 +11,6 @@ class EditMasterTask extends Component {
     emptyInputs: false,
   }
 
-  inputRef = React.createRef()
-
   componentDidMount() {
     this.getCurrentMasterTask()
   }
@@ -123,7 +121,6 @@ class EditMasterTask extends Component {
                       name="focusTime"
                       placeholder={this.state.currentMasterTask.focusTime}
                       onChange={this.handleInputChange}
-                      ref={this.inputRef}
                     ></input>
                   </td>
                   <td className="text-center">
@@ -132,7 +129,6 @@ class EditMasterTask extends Component {
                       name="breakTime"
                       placeholder={this.state.currentMasterTask.breakTime}
                       onChange={this.handleInputChange}
-                      ref={this.inputRef}
                     ></input>
                   </td>
                   <button

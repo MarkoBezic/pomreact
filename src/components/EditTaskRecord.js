@@ -78,8 +78,8 @@ class EditTaskRecord extends Component {
     })
   }
 
-  startInputRef = React.createRef()
-  endInputRef = React.createRef()
+  // startInputRef = React.createRef()
+  // endInputRef = React.createRef()
 
   handleInputChange = e => {
     const target = e.target
@@ -91,7 +91,6 @@ class EditTaskRecord extends Component {
     })
   }
   handleSaveRound = () => {
-    console.log(this.startInputRef.value, this.endInputRef.value)
     if (this.state.startTime !== '' && this.state.endTime !== '') {
       taskRoundsRef.add({
         parentTaskId: this.state.currentTaskId,
@@ -165,7 +164,7 @@ class EditTaskRecord extends Component {
                     name="startTime"
                     placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
                     onChange={this.handleInputChange}
-                    ref={this.startInputRef}
+                    // ref={this.startInputRef}
                   />
                 </td>
                 <td>
@@ -175,7 +174,7 @@ class EditTaskRecord extends Component {
                     name="endTime"
                     placeholder="mm/dd/yyy, hh:mm:ss AM/PM"
                     onChange={this.handleInputChange}
-                    ref={this.endInputRef}
+                    // ref={this.endInputRef}
                   />
                 </td>
                 <td>
