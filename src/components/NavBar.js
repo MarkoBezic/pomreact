@@ -35,9 +35,6 @@ class NavBar extends Component {
                     Home <span className="sr-only">(current)</span>
                   </Link>
                 </li>
-                <li className="nav-item">
-                  <span className="nav-link text-white">Charts</span>
-                </li>
               </ul>
             </nav>
           </>
