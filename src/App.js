@@ -14,7 +14,7 @@ function App() {
       <Switch>
         <Route
           exact
-          path="/timer"
+          path="/"
           render={props => (
             <div className="app pb-5">
               <Timer {...props} />

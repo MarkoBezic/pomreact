@@ -50,7 +50,7 @@ class EditMasterTask extends Component {
   }
 
   redirectToTimer = () => {
-    this.props.history.push('/timer')
+    this.props.history.push('/')
   }
 
   handleSave = () => {
