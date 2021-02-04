@@ -298,57 +298,57 @@ class Timer extends Component {
     })
   }
 
-  handleSubmit = e => {
-    e.preventDefault()
-
-    const self = this
-
-    let getCurrentMasterTaskId = async () => {
-      await masterTasksRef
-        .where('name', '==', self.state.taskName)
-        .get()
-        .then(querySnapshot => {
-          querySnapshot.forEach(doc => {
-            self.setState({
-              currentMasterTaskId: doc.id,
-            })
+  getCurrentMasterTaskId = async () => {
+    await masterTasksRef
+      .where('name', '==', this.state.taskName)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          this.setState({
+            currentMasterTaskId: doc.id,
           })
         })
-        .catch(error => {
-          console.log('Error getting documents: ', error)
-        })
-    }
-
-    let newTimerSetState = () => {
-      self.setState({
-        focusTime: self.state.userFocusTime * 60000,
-        breakTime: self.state.userBreakTime * 60000,
-        userFocusTime: self.state.userFocusTime * 60000,
-        userBreakTime: self.state.userBreakTime * 60000,
-        taskName: self.state.taskName,
-        onBreak: false,
-        counter: 0,
-        createdAt: new Date(),
-        createTimerSucces: true,
-        initialState: false,
       })
-      self.taskNameInput.current.value = ''
-      self.focusInput.current.value = ''
-      self.breakInput.current.value = ''
-    }
+      .catch(error => {
+        console.log('Error getting documents: ', error)
+      })
+  }
+
+  clearInputs = () => {
+    this.taskNameInput.current.value = ''
+    this.focusInput.current.value = ''
+    this.breakInput.current.value = ''
+  }
+
+  newTimerSetState = () => {
+    this.setState({
+      focusTime: this.state.userFocusTime * 60000,
+      breakTime: this.state.userBreakTime * 60000,
+      userFocusTime: this.state.userFocusTime * 60000,
+      userBreakTime: this.state.userBreakTime * 60000,
+      taskName: this.state.taskName,
+      onBreak: false,
+      counter: 0,
+      createdAt: new Date(),
+      createTimerSucces: true,
+      initialState: false,
+    })
+    this.getCurrentMasterTaskId()
+  }
+
+  createNewTimer = () => {
+    let self = this
+    /* check if timer exists, if not then add timer to databased and set state of new timer */
     masterTasksRef
       .where('name', '==', self.state.taskName)
       .get()
       .then(function (querySnapshot) {
         let masterTasks = []
         querySnapshot.forEach(function (doc) {
-          console.log(doc.id, ' => ', doc.data())
-          if (doc.data().user === self.state.user) {
-            masterTasks.push(doc.data())
-          }
-          console.log(masterTasks)
+          masterTasks.push(doc.data())
         })
 
+        //if timer does not exist add it to the database
         if (masterTasks.length === 0) {
           const newTask = {
             name: self.state.taskName,
@@ -359,8 +359,8 @@ class Timer extends Component {
             breakTime: self.state.userBreakTime,
           }
           masterTasksRef.doc().set(newTask)
-          newTimerSetState()
-          getCurrentMasterTaskId()
+          self.newTimerSetState()
+          //add new task to list of masterTasks in state
           self.setState({
             masterTasks: [...self.state.masterTasks, newTask],
             initialState: false,
@@ -375,6 +375,11 @@ class Timer extends Component {
       .catch(function (error) {
         console.log('Error getting documents: ', error)
       })
+  }
+  handleSubmit = e => {
+    e.preventDefault()
+    this.createNewTimer()
+    this.clearInputs()
   }
 
   render() {
