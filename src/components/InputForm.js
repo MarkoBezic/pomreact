@@ -6,7 +6,7 @@ class InputForm extends Component {
   render() {
     return (
       <div className="row">
-        <div className="col d-flex justify-content-center pt-3">
+        <div className="col pt-3">
           <form className="" onSubmit={e => this.handleSubmit(e)}>
             <input
               type="string"
