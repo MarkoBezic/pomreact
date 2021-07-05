@@ -1,3 +1,4 @@
+import { findByLabelText } from '@testing-library/react'
 import React, { Component } from 'react'
 import { confirmAlert } from 'react-confirm-alert'
 import { masterTasksRef } from '../firebase'
@@ -94,69 +95,72 @@ class EditMasterTask extends Component {
 
   render() {
     return (
-      <div>
-        {this.state.emptyInputs ? (
-          <h4 className="text-danger pl-5 pt-3">
-            Both fields must have a number!
-          </h4>
-        ) : (
-          ''
-        )}
-        <table>
-          <thead>
-            <tr>
-              <th className="p-3">Task</th>
-              <th className="p-3">Focus Minutes</th>
-              <th className="p-3">Break Minutes</th>
-            </tr>
-            <tr>
-              <td className="text-center">
-                {this.state.currentMasterTask.name}
-              </td>
-              {this.state.isEidtable ? (
-                <>
-                  <td className="text-center">
-                    <input
-                      type="number"
-                      name="focusTime"
-                      placeholder={this.state.currentMasterTask.focusTime}
-                      onChange={this.handleInputChange}
-                    ></input>
-                  </td>
-                  <td className="text-center">
-                    <input
-                      type="number"
-                      name="breakTime"
-                      placeholder={this.state.currentMasterTask.breakTime}
-                      onChange={this.handleInputChange}
-                    ></input>
-                  </td>
-                  <button
-                    className="btn btn-primary ml-1 mr-1 mt-1"
-                    onClick={() => {
-                      this.handleSave()
-                    }}
-                  >
-                    Save
-                  </button>
-                </>
-              ) : (
-                <>
-                  <td className="text-center">{this.state.focusTime}</td>
-                  <td className="text-center">{this.state.breakTime}</td>
-                  <button
-                    className="btn btn-primary ml-1 mr-1 mt-1"
-                    onClick={() => {
-                      this.handleEdit()
-                    }}
-                  >
-                    Edit
-                  </button>
-                </>
-              )}
-            </tr>
-          </thead>
-        </table>
+      <div className="d-flex p-4 mt-5">
+        <div className="border p-4 rounded mx-auto">
+          {this.state.emptyInputs ? (
+            <h4 className="text-danger pl-5 pt-3">
+              Both fields must have a number!
+            </h4>
+          ) : (
+            ''
+          )}
+          <table>
+            <thead>
+              <tr className="bg-secondary border">
+                <th className="p-3 text-white">Task</th>
+                <th className="p-3 text-white">Focus Minutes</th>
+                <th className="p-3 text-white">Break Minutes</th>
+                <th></th>
+              </tr>
+              <tr>
+                <td className="text-center text-white px-2 pt-3">
+                  {this.state.currentMasterTask.name}
+                </td>
+                {this.state.isEidtable ? (
+                  <>
+                    <td className="pt-3">
+                      <input
+                        type="number"
+                        name="focusTime"
+                        placeholder={this.state.currentMasterTask.focusTime}
+                        onChange={this.handleInputChange}
+                      ></input>
+                    </td>
+                    <td className="text-center pt-3">
+                      <input
+                        type="number"
+                        name="breakTime"
+                        placeholder={this.state.currentMasterTask.breakTime}
+                        onChange={this.handleInputChange}
+                      ></input>
+                    </td>
+                    <button
+                      className="btn btn-primary mt-3 ml-1 mr-1 mt-1"
+                      onClick={() => {
+                        this.handleSave()
+                      }}
+                    >
+                      Save
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <td className="text-center">{this.state.focusTime}</td>
+                    <td className="text-center">{this.state.breakTime}</td>
+                    <button
+                      className="btn btn-primary ml-1 mr-1 mt-1"
+                      onClick={() => {
+                        this.handleEdit()
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </>
+                )}
+              </tr>
+            </thead>
+          </table>
+        </div>
       </div>
     )
   }

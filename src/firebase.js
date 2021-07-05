@@ -1,6 +1,5 @@
 import firebase from 'firebase/app'
 import 'firebase/firestore'
-import 'firebase/auth'
 
 const config = {
   apiKey: 'AIzaSyAUp13B8qq3b1ww9ieGL5km-UnMJTyhQ_0',
@@ -16,8 +15,7 @@ const config = {
 firebase.initializeApp(config)
 
 const db = firebase.firestore()
-const firebaseAuth = firebase.auth()
 const masterTasksRef = db.collection('masterTasks')
 const taskRoundsRef = db.collection('taskRoundEntry')
 
-export { masterTasksRef, taskRoundsRef, firebaseAuth }
+export { masterTasksRef, taskRoundsRef }

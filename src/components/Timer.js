@@ -4,7 +4,6 @@ import { masterTasksRef, taskRoundsRef } from '../firebase'
 import Dashboard from './Dashboard'
 import { confirmAlert } from 'react-confirm-alert'
 import 'react-confirm-alert/src/react-confirm-alert.css'
-import { AuthConsumer } from './AuthContext'
 
 const audioClips = [
   {
@@ -37,17 +36,21 @@ class Timer extends Component {
     currentMasterTaskId: '',
     taskRoundsList: [],
     taskRoundsIds: [],
-    user: '',
   }
+
+  taskNameInput = React.createRef()
+  focusInput = React.createRef()
+  breakInput = React.createRef()
+
   componentDidMount() {
     this.intervalID = setInterval(() => this.tick(), 100)
     this.rollUpRoundsTotalToMasterTasks()
-    this.getAllMasterTasks(this.props.match.params.userId)
+    this.getAllMasterTasks()
     this.getAllTaskRoundDetails()
   }
 
   componentDidUpdate() {
-    this.getAllMasterTasks(this.props.match.params.userId)
+    this.getAllMasterTasks()
   }
 
   rollUpRoundsTotalToMasterTasks = async () => {
@@ -97,12 +100,9 @@ class Timer extends Component {
     sound.play()
   }
 
-  getAllMasterTasks = async userId => {
+  getAllMasterTasks = async () => {
     try {
-      const allMasterTasks = await masterTasksRef
-        .where('user', '==', userId)
-        .orderBy('createdAt')
-        .get()
+      const allMasterTasks = await masterTasksRef.get()
       let masterTasksList = []
       let masterTaskIds = []
       allMasterTasks.forEach(parentTask => {
@@ -298,59 +298,57 @@ class Timer extends Component {
     })
   }
 
-  handleSubmit = (e, userId) => {
-    e.preventDefault()
-    this.setState({
-      user: userId,
-    })
-    const self = this
-
-    let getCurrentMasterTaskId = async () => {
-      await masterTasksRef
-        .where('name', '==', self.state.taskName)
-        .get()
-        .then(querySnapshot => {
-          querySnapshot.forEach(doc => {
-            self.setState({
-              currentMasterTaskId: doc.id,
-            })
+  getCurrentMasterTaskId = async () => {
+    await masterTasksRef
+      .where('name', '==', this.state.taskName)
+      .get()
+      .then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          this.setState({
+            currentMasterTaskId: doc.id,
           })
         })
-        .catch(error => {
-          console.log('Error getting documents: ', error)
-        })
-    }
-
-    let newTimerSetState = () => {
-      self.setState({
-        focusTime: self.state.userFocusTime * 60000,
-        breakTime: self.state.userBreakTime * 60000,
-        userFocusTime: self.state.userFocusTime * 60000,
-        userBreakTime: self.state.userBreakTime * 60000,
-        taskName: self.state.taskName,
-        onBreak: false,
-        counter: 0,
-        createdAt: new Date(),
-        createTimerSucces: true,
-        user: userId,
       })
-      self.taskNameInput.current.value = ''
-      self.focusInput.current.value = ''
-      self.breakInput.current.value = ''
-    }
+      .catch(error => {
+        console.log('Error getting documents: ', error)
+      })
+  }
+
+  clearInputs = () => {
+    this.taskNameInput.current.value = ''
+    this.focusInput.current.value = ''
+    this.breakInput.current.value = ''
+  }
+
+  newTimerSetState = () => {
+    this.setState({
+      focusTime: this.state.userFocusTime * 60000,
+      breakTime: this.state.userBreakTime * 60000,
+      userFocusTime: this.state.userFocusTime * 60000,
+      userBreakTime: this.state.userBreakTime * 60000,
+      taskName: this.state.taskName,
+      onBreak: false,
+      counter: 0,
+      createdAt: new Date(),
+      createTimerSucces: true,
+      initialState: false,
+    })
+    this.getCurrentMasterTaskId()
+  }
+
+  createNewTimer = () => {
+    let self = this
+    /* check if timer exists, if not then add timer to databased and set state of new timer */
     masterTasksRef
       .where('name', '==', self.state.taskName)
       .get()
       .then(function (querySnapshot) {
         let masterTasks = []
         querySnapshot.forEach(function (doc) {
-          console.log(doc.id, ' => ', doc.data())
-          if (doc.data().user === self.state.user) {
-            masterTasks.push(doc.data())
-          }
-          console.log(masterTasks)
+          masterTasks.push(doc.data())
         })
 
+        //if timer does not exist add it to the database
         if (masterTasks.length === 0) {
           const newTask = {
             name: self.state.taskName,
@@ -359,11 +357,10 @@ class Timer extends Component {
             updatedAt: new Date(),
             focusTime: self.state.userFocusTime,
             breakTime: self.state.userBreakTime,
-            user: userId,
           }
           masterTasksRef.doc().set(newTask)
-          newTimerSetState()
-          getCurrentMasterTaskId()
+          self.newTimerSetState()
+          //add new task to list of masterTasks in state
           self.setState({
             masterTasks: [...self.state.masterTasks, newTask],
             initialState: false,
@@ -379,6 +376,11 @@ class Timer extends Component {
         console.log('Error getting documents: ', error)
       })
   }
+  handleSubmit = e => {
+    e.preventDefault()
+    this.createNewTimer()
+    this.clearInputs()
+  }
 
   render() {
     let time = !this.state.onBreak
@@ -389,139 +391,126 @@ class Timer extends Component {
 
     seconds = seconds < 10 ? '0' + seconds : seconds
     minutes = minutes < 10 ? '0' + minutes : minutes
-
     return (
-      <AuthConsumer>
-        {({ user }) => (
-          <>
-            <div
-              className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}
-            >
-              <div className="row">
-                <div className="col d-flex justify-content-center pt-3">
-                  <form
-                    className=""
-                    onSubmit={e => this.handleSubmit(e, user.id)}
-                  >
-                    <input
-                      type="string"
-                      name="taskName"
-                      placeholder="Enter Task Name"
-                      onChange={this.handleInputChange}
-                    />
-                    <input
-                      type="number"
-                      name="userFocusTime"
-                      placeholder="Enter focus minutes"
-                      onChange={this.handleInputChange}
-                    />
-                    <input
-                      type="number"
-                      name="userBreakTime"
-                      placeholder="Enter break minutes"
-                      onChange={this.handleInputChange}
-                    />
-                    <input type="submit" />
-                  </form>
-                </div>
-              </div>
-              {this.state.createTimerSucces === '' ? (
-                ''
-              ) : this.state.createTimerSucces ? (
-                <div className="row">
-                  <div className="col d-flex justify-content-center">
-                    <span className="pt-4 text-white font-weight-bold">
-                      New timer created
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="row">
-                  <div className="col d-flex justify-content-center">
-                    <span className="pt-4 text-white font-weight-bold">
-                      Timer already exists for this task. Please resume existing
-                      timer
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div className="row">
-                <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
-                  <span>
-                    {this.state.taskName
-                      ? this.state.taskName
-                      : 'Enter timer details'}
-                  </span>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col d-flex justify-content-center p-3">
-                  <span className="display-2 font-weight-bold text-white">
-                    {this.state.initialState
-                      ? '00:00'
-                      : `${minutes} : ${seconds}`}
-                  </span>
-                </div>
-              </div>
-              <div className="row">
-                <div className="col d-flex justify-content-center">
-                  {this.state.taskName ? (
-                    <>
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
-                        onClick={this.handleTimer}
-                      >
-                        {this.state.isRunning ? 'Stop' : 'Start'}
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
-                        onClick={this.handleReset}
-                      >
-                        Reset
-                      </button>
-                      {this.state.onBreak ? (
-                        <button
-                          type="button"
-                          className="btn btn-primary btn-lg m-2 p-4 font-weight-bold"
-                          onClick={this.handleSkip}
-                        >
-                          Skip
-                        </button>
-                      ) : (
-                        ''
-                      )}
-                    </>
-                  ) : (
-                    ' '
-                  )}
-                </div>
-              </div>
-              <div className="row">
-                <div className="col d-flex justify-content-center">
-                  <p className="font-weight-bold text-white pt-4">
-                    Rounds completed this session: {this.state.counter}
-                  </p>
-                </div>
-              </div>
-              <div className="row">
-                <div
-                  div
-                  className="col d-flex justify-content-center pt-4 text-white"
-                >
-                  <Dashboard
-                    {...this.props}
-                    masterTasks={this.state.masterTasks}
-                    handleResumeExistingTimer={this.handleResumeExistingTimer}
-                    handleDeleteTimer={this.handleDeleteTimer}
-                  />
-                </div>
+      <>
+        <div className={`container ${this.state.onBreak ? 'bg-danger' : ''}`}>
+          <div className="row">
+            <div className="col d-flex justify-content-center pt-3">
+              <form className="" onSubmit={e => this.handleSubmit(e)}>
+                <input
+                  type="string"
+                  name="taskName"
+                  placeholder="Enter Task Name"
+                  onChange={this.handleInputChange}
+                  ref={this.taskNameInput}
+                />
+                <input
+                  type="number"
+                  name="userFocusTime"
+                  placeholder="Enter focus minutes"
+                  onChange={this.handleInputChange}
+                  ref={this.focusInput}
+                />
+                <input
+                  type="number"
+                  name="userBreakTime"
+                  placeholder="Enter break minutes"
+                  onChange={this.handleInputChange}
+                  ref={this.breakInput}
+                />
+                <input type="submit" />
+              </form>
+            </div>
+          </div>
+          {this.state.createTimerSucces === '' ? (
+            ''
+          ) : this.state.createTimerSucces ? (
+            <div className="row">
+              <div className="col d-flex justify-content-center">
+                <span className="pt-4 text-white font-weight-bold">
+                  New timer created
+                </span>
               </div>
             </div>
-          </>
-        )}
-      </AuthConsumer>
+          ) : (
+            <div className="row">
+              <div className="col d-flex justify-content-center">
+                <span className="pt-4 text-white font-weight-bold">
+                  Timer already exists for this task. Please resume existing
+                  timer
+                </span>
+              </div>
+            </div>
+          )}
+          <div className="row">
+            <div className="col d-flex justify-content-center display-4 font-weight-bold text-white pt-4">
+              <span>
+                {this.state.taskName
+                  ? this.state.taskName
+                  : 'Enter timer details'}
+              </span>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col d-flex justify-content-center p-3">
+              <span className="display-2 font-weight-bold text-white">
+                {this.state.initialState ? '00:00' : `${minutes} : ${seconds}`}
+              </span>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col d-flex justify-content-center">
+              <>
+                <button
+                  type="button"
+                  className="btn btn-dark btn-lg m-2 p-4 font-weight-bold"
+                  onClick={this.handleTimer}
+                >
+                  {this.state.isRunning ? 'Stop' : 'Start'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-dark btn-lg m-2 p-4 font-weight-bold"
+                  onClick={this.handleReset}
+                >
+                  Reset
+                </button>
+                {this.state.onBreak ? (
+                  <button
+                    type="button"
+                    className="btn btn-dark btn-lg m-2 p-4 font-weight-bold"
+                    onClick={this.handleSkip}
+                  >
+                    Skip
+                  </button>
+                ) : (
+                  ''
+                )}
+              </>
+            </div>
+          </div>
+          <div className="row">
+            <div className="col d-flex justify-content-center">
+              <p className="font-weight-bold text-white pt-4">
+                Rounds completed this session: {this.state.counter}
+              </p>
+            </div>
+          </div>
+          <div className="row">
+            <div
+              div
+              className="col d-flex justify-content-center pt-4 text-white"
+            >
+              <Dashboard
+                {...this.props}
+                masterTasks={this.state.masterTasks}
+                handleResumeExistingTimer={this.handleResumeExistingTimer}
+                handleDeleteTimer={this.handleDeleteTimer}
+              />
+            </div>
+          </div>
+        </div>
+      </>
     )
   }
 }
