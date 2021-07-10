@@ -176,8 +176,7 @@ class Timer extends Component {
     if (this.state.focusTime < 1000 && !this.state.onBreak) {
       this.setState(prevState => ({
         onBreak: true,
-        focusTime:
-          this.state.userFocusTime <= 0 ? 1500000 : this.state.userFocusTime,
+        focusTime: this.state.userFocusTime,
         counter: prevState.counter + 1,
       }))
       this.soundPlay(audioClips[0].sound)
@@ -185,8 +184,7 @@ class Timer extends Component {
     } else if (this.state.breakTime < 1000 && this.state.onBreak) {
       this.setState({
         onBreak: false,
-        breakTime:
-          this.state.userBreakTime <= 0 ? 300000 : this.state.userBreakTime,
+        breakTime: this.state.userBreakTime,
       })
       this.soundPlay(audioClips[1].sound)
     } else if (this.state.isRunning && !this.state.onBreak) {
@@ -297,22 +295,22 @@ class Timer extends Component {
       ],
     })
   }
-
-  getCurrentMasterTaskId = async () => {
-    await masterTasksRef
-      .where('name', '==', this.state.taskName)
-      .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          this.setState({
-            currentMasterTaskId: doc.id,
-          })
-        })
-      })
-      .catch(error => {
-        console.log('Error getting documents: ', error)
-      })
-  }
+  // @marko todo delete duplicate function
+  // getCurrentMasterTaskId = async () => {
+  //   await masterTasksRef
+  //     .where('name', '==', this.state.taskName)
+  //     .get()
+  //     .then(querySnapshot => {
+  //       querySnapshot.forEach(doc => {
+  //         this.setState({
+  //           currentMasterTaskId: doc.id,
+  //         })
+  //       })
+  //     })
+  //     .catch(error => {
+  //       console.log('Error getting documents: ', error)
+  //     })
+  // }
 
   clearInputs = () => {
     this.taskNameInput.current.value = ''
@@ -376,6 +374,7 @@ class Timer extends Component {
         console.log('Error getting documents: ', error)
       })
   }
+
   handleSubmit = e => {
     e.preventDefault()
     this.createNewTimer()

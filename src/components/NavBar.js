@@ -7,7 +7,7 @@ class NavBar extends Component {
     return (
       <>
         <nav className="navbar navbar-expand-md navbar-light bg-dark">
-          <span className="navbar-brand text-white">Task Tracker</span>
+          <span className="navbar-brand text-white">Pomodoro Timer</span>
 
           <ul className="navbar-nav ml-auto">
             <li className="nav-item active">
