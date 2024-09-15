@@ -6,38 +6,33 @@ import EditMasterTask from './components/EditMasterTask'
 import EditTaskRecord from './components/EditTaskRecord'
 import PageNotFound from './components/PageNotFound'
 import NavBar from './components/NavBar'
-import UserForm from './components/UserForm'
-import AuthProvider from './components/AuthContext'
 
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <NavBar />
-        <Switch>
-          <Route exact path="/" component={UserForm} />
-          <Route
-            exact
-            path="/:userId/timer"
-            render={props => (
-              <div className="app bg-success pb-5">
-                <Timer {...props} />
-              </div>
-            )}
-          />
-          <Route
-            exact
-            path="/edit-mastertask"
-            render={props => <EditMasterTask {...props} />}
-          />
-          <Route
-            exact
-            path="/edit-rounds"
-            render={props => <EditTaskRecord {...props} />}
-          />
-          <Route component={PageNotFound} />
-        </Switch>
-      </AuthProvider>
+      <NavBar />
+      <Switch>
+        <Route
+          exact
+          path="/"
+          render={props => (
+            <div className="app pb-5">
+              <Timer {...props} />
+            </div>
+          )}
+        />
+        <Route
+          exact
+          path="/edit-mastertask"
+          render={props => <EditMasterTask {...props} />}
+        />
+        <Route
+          exact
+          path="/edit-rounds"
+          render={props => <EditTaskRecord {...props} />}
+        />
+        <Route component={PageNotFound} />
+      </Switch>
     </BrowserRouter>
   )
 }
